@@ -6,13 +6,11 @@
  * - a un ajustador
  */
 
-#include<stdlib.h>
-#include<math.h>
-
-struct punto {
-  int x,y;
-  int demanda;
-};
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "point.h"
+#include "arrdin.h"
 
 struct ajustador {
   char status;
@@ -26,7 +24,7 @@ struct contenedor {
   int Dx,Dy;
   int elementos;
   struct ajustador **ajustadores;
-  struct punto **puntos;
+  arrdin *puntos;
 };
 
 struct mapa {
@@ -37,14 +35,42 @@ struct mapa {
   struct contenedor ***A;
 };
 
-typedef struct punto punto;
+typedef struct point point;
 typedef struct ajustador ajustador;
 typedef struct contenedor contenedor;
 typedef struct mapa mapa;
 
-void agrega_punto(contenedor*,punto*);
+void printf_mapa(mapa*);
+void agrega_punto(contenedor*,point*);
+mapa* organiza_puntos(point*,int);
 
-mapa* organiza_puntos(punto* puntos,int k){
+int main(){
+  int k,s,d,i;
+  char string[64];
+  FILE *archivo_puntos;
+  point *puntos;
+  mapa *map;
+  
+  archivo_puntos = fopen("../Tesis/Instancias/Q_MCLP_30.txt","r");
+  if (archivo_puntos == NULL) {
+    printf("Error al abrir el archivo\n");
+    return 0;
+  }
+  fscanf(archivo_puntos,"%d",&k);
+  fscanf(archivo_puntos,"%d",&s);
+  puntos = (point*)malloc(sizeof(point)*k);
+  for (i = 0;i < k;i++) {
+    fscanf(archivo_puntos,"%d",&(puntos[i].x));
+    fscanf(archivo_puntos,"%d",&(puntos[i].y));
+    fscanf(archivo_puntos,"%d",&d);
+  }
+  fclose(archivo_puntos);
+  map = organiza_puntos(puntos,k);
+  printf_mapa(map);
+
+}
+
+mapa* organiza_puntos(point* puntos,int k){
   
   int i,j,l;
   int r,s;
@@ -53,18 +79,24 @@ mapa* organiza_puntos(punto* puntos,int k){
   contenedor *bin;
   
   map = (mapa*)malloc(sizeof(mapa));
-  map->n = map->m = ceiling((float) k / log(k));
-  map->xmin = map->xmax = puntos[0].x;
-  map->ymin = map->ymax = puntos[0].y;
+  printf("Calculando n\n");
+  map->n = map->m = ceil((float)k / log((float)k));
+  printf("Se obtuvo %d\n",map->n);
+  map->xmin = puntos[0].x;
+  map->xmax = puntos[0].x;
+  map->ymin = puntos[0].y;
+  map->ymax = puntos[0].y;
   for (i = 1;i < k;i++) {
     if (puntos[i].x < map->xmin) map->xmin = puntos[i].x;
     if (puntos[i].x > map->xmax) map->xmax = puntos[i].x;
     if (puntos[i].y > map->ymin) map->ymin = puntos[i].y;
     if (puntos[i].y > map->ymax) map->ymax = puntos[i].y;
   }
+  printf("Obtiene maximos y minimos\n");
 
   s = (map->xmax - map->xmin) / map->n;
   r = (map->xmax - map->xmin) % s;
+  printf("%d divisiones con residuo %d\n",s,r);
   if (r > 0) {
     if (s - r > 1) {
       map->xmin -= (s - r) / 2;
@@ -76,6 +108,7 @@ mapa* organiza_puntos(punto* puntos,int k){
     map->n++;
   }
   map->delta_x = s;
+  printf("Obitne delta x %d\n",s);
 
   s = (map->ymax - map->ymin) / map->m;
   r = (map->ymax - map->ymin) % s;
@@ -90,6 +123,7 @@ mapa* organiza_puntos(punto* puntos,int k){
     map->m++;
   }
   map->delta_y = s;
+  printf("Obitne delta y %d\n",s);
 
   map->A = (contenedor***)malloc(sizeof(contenedor**)*map->n);
   for (i = 0;i < map->n;i++) {
@@ -113,11 +147,24 @@ mapa* organiza_puntos(punto* puntos,int k){
   }
 }
 
-void agrega_punto(contenedor *bin,punto *point){
+void printf_mapa(mapa *map){
+  int i,j;
+  for (i = 0;i < map->n;i++) {
+    for (j = 0;j < map->m;j++) {
+      if (map->A[i][j] == NULL)
+	printf("0");
+      else
+	printf("%d",map->A[i][j]->elementos);
+    }
+    printf("\n");
+  }
+}
+
+void agrega_punto(contenedor *bin,point *point){
   int i;
-  punto **puntos;
+  point **puntos;
   if (bin->elementos == 0) {
-    bin->puntos = (punto**)malloc(sizeof(punto*));
+    bin->puntos = (point**)malloc(sizeof(point*));
     bin->elementos = 1;
   }
   puntos = bin->puntos;
@@ -128,7 +175,7 @@ void agrega_punto(contenedor *bin,punto *point){
     }
   }
   if (i == bin->elementos) {
-    puntos = (punto**)malloc(sizeof(punto*)*bin->elementos*2);
+    puntos = (point**)malloc(sizeof(point*)*bin->elementos*2);
     puntos[i] = point;
     for (i = 0;i < bin->elementos;i++) {
       puntos[i] = bin->puntos[i];
