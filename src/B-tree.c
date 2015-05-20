@@ -12,6 +12,8 @@
 
 B_node* _B_tree_create_node(int t);
 B_node* _B_tree_find_node(B_tree *T,B_node *x,const void *key);
+const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key);
+
 void free_B_node(B_node *x);
 void B_tree_split_child(B_node *x,int i);
 void B_tree_insert_nonfull(B_node *x,const void *key);
@@ -51,18 +53,25 @@ B_node *B_tree_find_node(B_tree *T,const void *key) {
   return _B_tree_find_node(T,T->root,key);
 }
 
-const void *B_tree_predecessor(B_node *T,B_node *x,int key){
+const void *B_tree_predecessor(B_node *T,const void *key){
+  return _B_tree_predecessor(T,T->root,key);
+}
+
+const void *_B_tree_predecessor(B_node *T,B_node *x,const void *key){
   int i = x->n;
-  int predecessor;
-  while (i > 0 && key < x->key[i-1]) i--;
+  cont void *predecessor;
+  while (i > 0 && (B->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
   if (x->leaf)
-    return (i > 0 ? x->key[i-1] : key);
-  predecessor = B_tree_predecessor(x->c[i],key);
-  if (i > 0 && predecessor == key)
+    return (i > 0 ? x->key[i-1] : NULL);
+  predecessor = _B_tree_predecessor(T,x->c[i],key);
+  if (i > 0 && (T->fcmp)(T->info,predecessor,key) == 0)
     predecessor = x->key[i-1];
   return predecessor;
 }
 
+const void *B_tree_successor(B_node *x,int key){
+  return _B_tree_successor(T,T->root,key);
+}
 const void *B_tree_successor(B_node *x,int key){
   int i = x->n;
   int successor;
