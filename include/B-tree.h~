@@ -1,0 +1,56 @@
+/* B-tree.c */
+
+/***********************************************************************
+ * Author: Luis Maltos
+ * Clase: Estructura de Datos en C++
+ * Implementacion de arboles B
+ * Se implementa:
+ *  search, create, insert, delete
+***********************************************************************/
+
+#include "B-tree.h"
+
+#define TRUE 1
+#define FALSE 0
+#define B_TREE_T 3
+#define DEBUG 0
+
+struct B_node{
+  int n;
+  int *key;
+  int leaf;
+  struct B_node **c;
+};
+
+struct B_tree{
+  int t;
+  struct B_node *root;
+};
+
+typedef struct B_node B_node;
+typedef struct B_tree B_tree;
+
+B_tree* B_tree_create_tree
+(int t,int (*fcmp)(void *info,const void *key1,const void *key2));
+/* create B-tree */
+
+B_node *B_tree_insert_key(B_tree *T,const void *key);
+/* insert new node into B-tree */
+
+B_node *B_tree_find_node(B_node *x,int k);
+/* find node in B-tree */
+
+B_node *B_tree_predecessor(B_node *x,const void *key);
+/* find the predecessor node in B-tree */
+
+B_node *B_tree_successor(B_node *x,const void *key);
+/* find the successor node in B-tree */
+
+void B_tree_remove_key(B_tree *T,const void *key);
+/* remove key from B-tree */
+
+void B_tree_delete_tree(B_tree *T);
+/* delete B-tree */
+
+void gnuplot(B_tree *T);
+/* plots the B-tree from gnuplot */
