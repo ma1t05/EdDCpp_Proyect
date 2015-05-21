@@ -57,31 +57,8 @@ const void *B_tree_predecessor(B_node *T,const void *key){
   return _B_tree_predecessor(T,T->root,key);
 }
 
-const void *_B_tree_predecessor(B_node *T,B_node *x,const void *key){
-  int i = x->n;
-  cont void *predecessor;
-  while (i > 0 && (B->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
-  if (x->leaf)
-    return (i > 0 ? x->key[i-1] : NULL);
-  predecessor = _B_tree_predecessor(T,x->c[i],key);
-  if (i > 0 && (T->fcmp)(T->info,predecessor,key) == 0)
-    predecessor = x->key[i-1];
-  return predecessor;
-}
-
 const void *B_tree_successor(B_node *x,int key){
   return _B_tree_successor(T,T->root,key);
-}
-const void *B_tree_successor(B_node *x,int key){
-  int i = x->n;
-  int successor;
-  while (i > 0 && key < x->key[i-1]) i--;
-  if (x->leaf)
-    return (i < x->n ? x->key[i] : key);
-  successor = B_tree_successor(x->c[i],key);
-  if (i < x->n && successor == key)
-    successor = x->key[i];
-  return successor;
 }
 
 B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
@@ -94,82 +71,26 @@ B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
   return B_tree_find_node(T,x->c[i],k);
 }
 
-void free_B_node(B_node *x){
-  int i;
-  if (!x->leaf)
-    for(i = 0;i < x->n;i++) free_B_node(x->c[i]);
-  free(x->key);
-  free(x->c);
-}
-
-void free_B_tree(B_tree *T){
-  free_B_node(T->root);
-  free(T);
-}
-
-B_node* B_node_create(int t){
-  int i;
-  B_node *x;
-  x = (B_node*)malloc(sizeof(B_node));
-  x->n = 0;
-  x->leaf = TRUE;
-  x->key = (int*)malloc(sizeof(int)*(2*t - 1));
-  x->c = (B_node**)malloc(sizeof(B_node*)*(2*t));
-  for(i = 0;i < 2*t;i++) x->c[i] = NULL;
-  return x;
-}
-
-
-void B_tree_split_child(B_node *x,int i){
-  int j;
-  B_node *y,*z;
-  printf("Comienza split child en posicion %d\n",i);
-  z = B_node_create(B_TREE_T);
-  y = x->c[i];
-  z->leaf = y->leaf;
-  z->n = B_TREE_T - 1;
-  for(j = 0;j < B_TREE_T - 1;j++)
-    z->key[j] = y->key[j+B_TREE_T];
-  if (!y->leaf) {
-    for(j = 0;j < B_TREE_T;j++)
-      z->c[j] = y->c[j+B_TREE_T];
-  }
-  y->n = B_TREE_T - 1;
-  for(j = x->n;j > i+1;j--)
-    x->c[j+1] = x->c[j];
-  x->c[i+1] = z;
-  for(j = x->n;j > i;j--)
-    x->key[j] = x->key[j-1];
-  x->key[i] = y->key[B_TREE_T - 1];
-  x->n++;
-}
-
-void B_tree_insert_nonfull(B_node *x,int key){
+const void *_B_tree_predecessor(B_node *T,B_node *x,const void *key){
   int i = x->n;
-#ifdef DEBUG
-  printf("Entra a insert nonfull\n");
-#endif
-  if (x->leaf) {
-    printf("Es hoja en nodo de tamaño %d\n",x->n);
-    while (i > 0 && key < x->key[i-1])
-      x->key[i] = x->key[--i]; /* Precaucion!, validar orden de aplicacion */
-    printf("Se detiene en poscion %d\n",i);
-    x->key[i] = key;
-    x->n++;
-    printf("Agrego clave %d en poscion %d\n",key,i);
-  }
-  else {
-    while (i > 0 && key < x->key[i-1])
-      i--;
-    if (x->c[i]->n == 2 * B_TREE_T - 1) {
-      B_tree_split_child(x,i);
-      if (key > x->key[i]) i++;
-    }
-    B_tree_insert_nonfull(x->c[i],key);
-  }
+  cont void *predecessor;
+  while (i > 0 && (T->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
+  if (x->leaf)
+    return (i > 0 ? x->key[i-1] : NULL);
+  return _B_tree_predecessor(T,x->c[i-1],key);
 }
 
-void _B_tree_delete(B_node *x,int key){
+const void *_B_tree_successor(B_tree *T,B_node *x,int key){
+  int i = 0;
+  const void *successor;
+  while (i < x->n && (T->fcmp)(T->info,key,x->key[i]) >= 0) i++;
+  if (x->leaf)
+    return (i < x->n ? x->key[i] : NULL);
+  return  _B_tree_successor(T,x->c[i],key);
+}
+
+/* B-tree remove key */
+void B_tree_delete_node(B_node *x,const void *key){
   int i = x->n - 1,j;
   int k;
   B_node *y,*z;
@@ -269,7 +190,82 @@ void _B_tree_delete(B_node *x,int key){
     }
     _B_tree_delete(y,key);
   }
-  
+}
+
+void B_tree_delete_tree(B_tree *T){
+  B_tree_delete_node(T->root);
+  free(T);
+}
+
+void B_tree_delete_node(B_node *x){
+  int i;
+  if (!x->leaf)
+    for(i = 0;i < x->n;i++) B_tree_delete_node(x->c[i]);
+  free(x->key);
+  free(x->c);
+  free(x);
+}
+
+B_node* B_node_create(int t){
+  int i;
+  B_node *x;
+  x = (B_node*)malloc(sizeof(B_node));
+  x->n = 0;
+  x->leaf = TRUE;
+  x->key = (int*)malloc(sizeof(int)*(2*t - 1));
+  x->c = (B_node**)malloc(sizeof(B_node*)*(2*t));
+  for(i = 0;i < 2*t;i++) x->c[i] = NULL;
+  return x;
+}
+
+
+void B_tree_split_child(B_node *x,int i){
+  int j;
+  B_node *y,*z;
+  printf("Comienza split child en posicion %d\n",i);
+  z = B_node_create(B_TREE_T);
+  y = x->c[i];
+  z->leaf = y->leaf;
+  z->n = B_TREE_T - 1;
+  for(j = 0;j < B_TREE_T - 1;j++)
+    z->key[j] = y->key[j+B_TREE_T];
+  if (!y->leaf) {
+    for(j = 0;j < B_TREE_T;j++)
+      z->c[j] = y->c[j+B_TREE_T];
+  }
+  y->n = B_TREE_T - 1;
+  for(j = x->n;j > i+1;j--)
+    x->c[j+1] = x->c[j];
+  x->c[i+1] = z;
+  for(j = x->n;j > i;j--)
+    x->key[j] = x->key[j-1];
+  x->key[i] = y->key[B_TREE_T - 1];
+  x->n++;
+}
+
+void B_tree_insert_nonfull(B_node *x,int key){
+  int i = x->n;
+#ifdef DEBUG
+  printf("Entra a insert nonfull\n");
+#endif
+  if (x->leaf) {
+    printf("Es hoja en nodo de tamaño %d\n",x->n);
+    while (i > 0 && key < x->key[i-1])
+      x->key[i] = x->key[--i]; /* Precaucion!, validar orden de aplicacion */
+    printf("Se detiene en poscion %d\n",i);
+    x->key[i] = key;
+    x->n++;
+    printf("Agrego clave %d en poscion %d\n",key,i);
+  }
+  else {
+    while (i > 0 && key < x->key[i-1])
+      i--;
+    if (x->c[i]->n == 2 * B_TREE_T - 1) {
+      B_tree_split_child(x,i);
+      if (key > x->key[i]) i++;
+    }
+    B_tree_insert_nonfull(x->c[i],key);
+  }
 }
 
 void B_tree_delete(B_tree *T,int key){
