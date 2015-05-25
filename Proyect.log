@@ -1,14 +1,14 @@
 20150430
 Ideas para almacenar puntos
--Un arbol que divida el mapa en cuadrantes, 
+ Un arbol que divida el mapa en cuadrantes, 
 para hubicar en sus hijos, con traslapes, para evitar 
 -Hash por coordenadas en x, con arboles en y
 -buscar online k nearest neighbors
--Usar muestra alatoria
+ Usar muestra alatoria
 -Usar voronoi, para discretizar celdas y asignar a sus centros
 -Calcular un aproximado de el mas cercano
 -Arboles B para ordenar por x luego nodos por y
--Probar caso con for a 50 puntos
+ Probar caso con for a 50 puntos
 
 Insertar y eliminar
 	 ajustador, latitud, longitud, estado

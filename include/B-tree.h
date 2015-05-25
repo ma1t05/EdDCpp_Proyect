@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define TRUE 1
+#define FALSE 0
+
 typedef struct B_node B_node;
 typedef struct B_tree B_tree;
 
@@ -21,7 +24,7 @@ struct B_tree {
   /* B-tree */
   int t;
   /* Parameter for number of keys in nodes between [t-1,2*t - 1] */
-  struct B_node *root;
+  B_node *root;
   /* pointer to the root node */
   int (*fcmp)(void *info, const void *key1, const void *key2);
   /* application-defined key comparison routine */
@@ -35,7 +38,7 @@ struct B_node {
   /* node of a B-tree */
   int n;
   /* number of keys */
-  const void *key;
+  void *key;
   /* pointer to the node array of keys */
   short int leaf;
   /* node flag:
@@ -52,13 +55,13 @@ B_tree* B_tree_create_tree
 B_node *B_tree_insert_key(B_tree *T,const void *key);
 /* insert new node into B-tree */
 
-B_node *B_tree_find_node(B_node *x,const void *key);
+B_node *B_tree_find_node(B_tree *T,const void *key);
 /* find node in B-tree */
 
-const void *B_tree_predecessor(B_node *x,const void *key);
+const void *B_tree_predecessor(B_tree *T,const void *key);
 /* find the predecessor node in B-tree */
 
-const void *B_tree_successor(B_node *x,const void *key);
+const void *B_tree_successor(B_tree *T,const void *key);
 /* find the successor node in B-tree */
 
 void B_tree_remove_key(B_tree *T,const void *key);

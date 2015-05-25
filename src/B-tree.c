@@ -13,17 +13,18 @@
 B_node* _B_tree_create_node(int t);
 B_node* _B_tree_find_node(B_tree *T,B_node *x,const void *key);
 const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key);
+void _B_tree_remove_key(B_tree *T,B_node *x,const void *key);
+void _B_tree_delete_node(B_node *x);
 
 void free_B_node(B_node *x);
-void B_tree_split_child(B_node *x,int i);
-void B_tree_insert_nonfull(B_node *x,const void *key);
-void _B_tree_delete(B_node *x,const void *key);
+void B_tree_split_child(B_tree *T,B_node *x,int i);
+void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key);
 float plot(B_node *x,FILE *nodes,FILE *edges,FILE* boxes,float xo,float y);
 
 B_tree* B_tree_create_tree (int t,int (*fcmp)(void *info,const void *key1,const void *key2)){
   B_tree *T;
   B_node *x;
-  x = B_node_create(t);
+  x = _B_tree_create_node(t);
   T = (B_tree*)malloc(sizeof(B_tree));
   T->t = t;
   T->root = x;
@@ -33,19 +34,32 @@ B_tree* B_tree_create_tree (int t,int (*fcmp)(void *info,const void *key1,const 
   return T;
 }
 
+B_node* _B_tree_create_node(int t){
+  int i;
+  B_node *x;
+  x = (B_node*)malloc(sizeof(B_node));
+  x->n = 0;
+  x->leaf = TRUE;
+  x->key = (void**)malloc(sizeof(void*)*(2*t - 1));
+  for(i = 0;i < 2*t-1;i++) x->key[i] = NULL;
+  x->c = (B_node**)malloc(sizeof(B_node*)*(2*t));
+  for(i = 0;i < 2*t;i++) x->c[i] = NULL;
+  return x;
+}
+
 B_node *B_tree_insert_key (B_tree *T,const void *key) {
   B_node *r,*s;
   r = T->root;
   if (r->n == 2 * T->t - 1) {
-    s = B_node_create(T->t);
+    s = _B_tree_create_node(T->t);
     T->root = s;
     s->leaf = FALSE;
     s->n = 0;
     s->c[0] = r;
-    B_tree_split_child(s,0);
+    B_tree_split_child(T,s,0);
     r = s;
   }
-  B_tree_insert_nonfull(r,key);
+  B_tree_insert_nonfull(T,r,key);
 }
 
 
@@ -53,34 +67,34 @@ B_node *B_tree_find_node(B_tree *T,const void *key) {
   return _B_tree_find_node(T,T->root,key);
 }
 
-const void *B_tree_predecessor(B_node *T,const void *key){
+const void *B_tree_predecessor(B_tree *T,const void *key){
   return _B_tree_predecessor(T,T->root,key);
 }
 
-const void *B_tree_successor(B_node *x,int key){
+const void *B_tree_successor(B_tree *T,const void *key){
   return _B_tree_successor(T,T->root,key);
 }
 
 B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
   int i = 0;
-  while(i <= x->n && (T->fcmp)(T->info,k,x->key[i]) > 0) i++;
-  if (i <= x->n && (T->fcmp)(T->info,k,x->key[i]) == 0)
+  while(i <= x->n && (T->fcmp)(T->info,key,(x->key)[i]) > 0) i++;
+  if (i <= x->n && (T->fcmp)(T->info,key,x->key[i]) == 0)
     return x;
   if (x->leaf)
     return NULL;
-  return B_tree_find_node(T,x->c[i],k);
+  return _B_tree_find_node(T,x->c[i],key);
 }
 
-const void *_B_tree_predecessor(B_node *T,B_node *x,const void *key){
+const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key){
   int i = x->n;
-  cont void *predecessor;
+  const void *predecessor;
   while (i > 0 && (T->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
   if (x->leaf)
     return (i > 0 ? x->key[i-1] : NULL);
   return _B_tree_predecessor(T,x->c[i-1],key);
 }
 
-const void *_B_tree_successor(B_tree *T,B_node *x,int key){
+const void *_B_tree_successor(B_tree *T,B_node *x,const void *key){
   int i = 0;
   const void *successor;
   while (i < x->n && (T->fcmp)(T->info,key,x->key[i]) >= 0) i++;
@@ -89,14 +103,16 @@ const void *_B_tree_successor(B_tree *T,B_node *x,int key){
   return  _B_tree_successor(T,x->c[i],key);
 }
 
-/* B-tree remove key */
-void B_tree_delete_node(B_node *x,const void *key){
+void B_tree_remove_key(B_tree *T,const void *key){
+  _B_tree_remove_key(T,T->root,key);
+}
+
+void _B_tree_remove_key(B_tree *T,B_node *x,const void *key){
   int i = x->n - 1,j;
-  int k;
+  const void *k;
   B_node *y,*z;
-  while (i > 0 && key < x->key[i])
-    i--;
-  if (key == x->key[i]){
+  while (i > 0 && (T->fcmp)(T->info,key,x->key[i]) < 0) i--;
+  if ((T->fcmp)(T->info,key,x->key[i]) == 0) {
     if (x->leaf){ /* Case 1 */
       for(;i < x->n;i++)
 	x->key[i-1] = x->key[i];
@@ -104,15 +120,15 @@ void B_tree_delete_node(B_node *x,const void *key){
     else { /* Case 2 */
       y = x->c[i];
       z = x->c[i+1];
-      if (y->n >= B_TREE_T) { /* 2a */
-	k = B_tree_predecessor(y,key);
+      if (y->n >= T->t) { /* 2a */
+	k = _B_tree_predecessor(T,y,key);
 	x->key[i] = k;
-	_B_tree_delete(y,k);
+	_B_tree_remove_key(T,y,k);
       }
-      else if (z->n >= B_TREE_T) { /* 2b */
-	k = B_tree_successor(z,key);
+      else if (z->n >= T->t) { /* 2b */
+	k = _B_tree_successor(T,z,key);
 	x->key[i] = k;
-	_B_tree_delete(z,k);
+	_B_tree_remove_key(T,z,k);
       }
       else { /* 2c */
 	i++;
@@ -121,10 +137,10 @@ void B_tree_delete_node(B_node *x,const void *key){
 	  x->key[i-1] = x->key[i];
 	  x->c[i] = x->c[i+1];
 	}
-	y->key[B_TREE_T] = key;
+	y->key[T->t] = key;
 	for(i = 1;i < z->n;i++){
-	  y->key[B_TREE_T + i] = z->key[i];
-	  y->c[B_TREE_T + i] = z->c[i];
+	  y->key[T->t + i] = z->key[i];
+	  y->c[T->t + i] = z->c[i];
 	  free(z->key);
 	  free(z->c);
 	}
@@ -133,29 +149,29 @@ void B_tree_delete_node(B_node *x,const void *key){
     }
   }
   else { /* Case 3 */
-    y = (key < x->key[i] ? x->c[i] : x->c[++i]);
-    if (y->n < B_TREE_T) {
-      if (i < x->n && x->c[i+1]->n >= B_TREE_T) {
-	z = x->c[i+1]; /* Hermano con mas de t claves */
+    y = ((T->fcmp)(T->info,key,x->key[i]) < 0 ? x->c[i] : x->c[++i]);
+    if (y->n < T->t) {
+      if (i < x->n && x->c[i+1]->n >= T->t) {
+	z = x->c[i+1]; /* Hermano con almenos t claves */
 	/* Baja clave de x a y */
 	y->n++;
-	y->key[B_TREE_T - 1] = x->key[i];
-	y->c[B_TREE_T] = z->c[0];
+	y->key[T->t - 1] = x->key[i];
+	y->c[T->t] = z->c[0];
 	/* Sube clave de hermano a x */
 	x->key[i] = z->key[0];
 	/* Suprimir clave 0 de hermano */
 	z->c[0] = z->c[1];
 	for(j = 1;j < z->n;j++){
 	  z->key[j-1] = z->key[j];
-	  z->c[j] = z->c[j-1];
+	  z->c[j] = z->c[j+1];
 	}
 	z->n--;
       }
-      else if (i > 0 && x->c[i-1]->n >= B_TREE_T) {
+      else if (i > 0 && x->c[i-1]->n >= T->t) {
 	z = x->c[i-1]; /* Hermano con mas de t claves */
 	/* Baja clave de x a y */
 	y->n++;
-	y->c[B_TREE_T] = y->c[B_TREE_T - 1];
+	y->c[T->t] = y->c[T->t - 1];
 	for(j = y->n - 1;j > 0;j--){
 	  y->key[j] = y->key[j-1];
 	  y->c[j] = y->c[j-1];
@@ -165,7 +181,7 @@ void B_tree_delete_node(B_node *x,const void *key){
 	/* Sube clave de hermano a x */
 	x->key[i] = z->key[z->n-1];
 	/* Suprime ultima clave a hermano */
-	z->key[z->n-1] = 0; /* No es necesario borrar valor */
+	z->key[z->n-1] = NULL; /* No es necesario borrar valor */
 	z->c[z->n] = NULL; /* No es necesario apuntar nuevamente a null */
 	z->n--;
       }
@@ -177,77 +193,62 @@ void B_tree_delete_node(B_node *x,const void *key){
 	  y = x->c[i-1];
 	}
 	/* Combinar z en y */
-	y->key[B_TREE_T - 1] = x->key[i];
-	y->c[B_TREE_T] = z->c[0];
+	y->key[T->t - 1] = x->key[i];
+	y->c[T->t] = z->c[0];
 	for(j = 0;j < z->n;i++){
-	  y->key[B_TREE_T + j] = z->key[j];
-	  y->c[B_TREE_T + j + 1] = z->c[j+1];
+	  y->key[T->t + j] = z->key[j];
+	  y->c[T->t + j + 1] = z->c[j+1];
 	}
 	free(z->key);
 	free(z->c);
 	free(z);
       }
     }
-    _B_tree_delete(y,key);
+    _B_tree_remove_key(y,key);
   }
 }
 
 void B_tree_delete_tree(B_tree *T){
-  B_tree_delete_node(T->root);
+  _B_tree_delete_node(T->root);
   free(T);
 }
 
-void B_tree_delete_node(B_node *x){
+void _B_tree_delete_node(B_node *x){
   int i;
   if (!x->leaf)
-    for(i = 0;i < x->n;i++) B_tree_delete_node(x->c[i]);
+    for(i = 0;i <= x->n;i++) _B_tree_delete_node(x->c[i]);
   free(x->key);
   free(x->c);
   free(x);
 }
 
-B_node* B_node_create(int t){
-  int i;
-  B_node *x;
-  x = (B_node*)malloc(sizeof(B_node));
-  x->n = 0;
-  x->leaf = TRUE;
-  x->key = (int*)malloc(sizeof(int)*(2*t - 1));
-  x->c = (B_node**)malloc(sizeof(B_node*)*(2*t));
-  for(i = 0;i < 2*t;i++) x->c[i] = NULL;
-  return x;
-}
 
-
-void B_tree_split_child(B_node *x,int i){
+void B_tree_split_child(B_tree *T,B_node *x,int i){
   int j;
   B_node *y,*z;
   printf("Comienza split child en posicion %d\n",i);
-  z = B_node_create(B_TREE_T);
+  z = _B_tree_create_node(T->t);
   y = x->c[i];
   z->leaf = y->leaf;
-  z->n = B_TREE_T - 1;
-  for(j = 0;j < B_TREE_T - 1;j++)
-    z->key[j] = y->key[j+B_TREE_T];
+  z->n = T->t - 1;
+  for(j = 0;j < T->t - 1;j++)
+    z->key[j] = y->key[j+T->t];
   if (!y->leaf) {
-    for(j = 0;j < B_TREE_T;j++)
-      z->c[j] = y->c[j+B_TREE_T];
+    for(j = 0;j < T->t;j++)
+      z->c[j] = y->c[j+T->t];
   }
-  y->n = B_TREE_T - 1;
+  y->n = T->t - 1;
   for(j = x->n;j > i+1;j--)
     x->c[j+1] = x->c[j];
   x->c[i+1] = z;
   for(j = x->n;j > i;j--)
     x->key[j] = x->key[j-1];
-  x->key[i] = y->key[B_TREE_T - 1];
+  x->key[i] = y->key[T->t - 1];
   x->n++;
 }
 
-void B_tree_insert_nonfull(B_node *x,int key){
+void B_tree_insert_nonfull(B_tree *T,B_node *x,int key){
   int i = x->n;
-#ifdef DEBUG
-  printf("Entra a insert nonfull\n");
-#endif
   if (x->leaf) {
     printf("Es hoja en nodo de tamaño %d\n",x->n);
     while (i > 0 && key < x->key[i-1])
@@ -260,11 +261,11 @@ void B_tree_insert_nonfull(B_node *x,int key){
   else {
     while (i > 0 && key < x->key[i-1])
       i--;
-    if (x->c[i]->n == 2 * B_TREE_T - 1) {
-      B_tree_split_child(x,i);
+    if (x->c[i]->n == 2 * T->t - 1) {
+      B_tree_split_child(T,x,i);
       if (key > x->key[i]) i++;
     }
-    B_tree_insert_nonfull(x->c[i],key);
+    B_tree_insert_nonfull(T,x->c[i],key);
   }
 }
 
