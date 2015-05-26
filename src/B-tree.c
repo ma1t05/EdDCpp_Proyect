@@ -12,7 +12,8 @@
 
 B_node* _B_tree_create_node(int t);
 B_node* _B_tree_find_node(B_tree *T,B_node *x,const void *key);
-const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key);
+void *_B_tree_successor(B_tree *T,B_node *x,const void *key);
+void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key);
 void _B_tree_remove_key(B_tree *T,B_node *x,const void *key);
 void _B_tree_delete_node(B_node *x);
 
@@ -41,7 +42,8 @@ B_node* _B_tree_create_node(int t){
   x->n = 0;
   x->leaf = TRUE;
   x->key = (void**)malloc(sizeof(void*)*(2*t - 1));
-  for(i = 0;i < 2*t-1;i++) x->key[i] = NULL;
+  for(i = 0;i < 2*t-1;i++) 
+    x->key[i] = NULL;
   x->c = (B_node**)malloc(sizeof(B_node*)*(2*t));
   for(i = 0;i < 2*t;i++) x->c[i] = NULL;
   return x;
@@ -67,11 +69,11 @@ B_node *B_tree_find_node(B_tree *T,const void *key) {
   return _B_tree_find_node(T,T->root,key);
 }
 
-const void *B_tree_predecessor(B_tree *T,const void *key){
+void *B_tree_predecessor(B_tree *T,const void *key){
   return _B_tree_predecessor(T,T->root,key);
 }
 
-const void *B_tree_successor(B_tree *T,const void *key){
+void *B_tree_successor(B_tree *T,const void *key){
   return _B_tree_successor(T,T->root,key);
 }
 
@@ -85,7 +87,7 @@ B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
   return _B_tree_find_node(T,x->c[i],key);
 }
 
-const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key){
+void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key){
   int i = x->n;
   const void *predecessor;
   while (i > 0 && (T->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
@@ -94,9 +96,9 @@ const void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key){
   return _B_tree_predecessor(T,x->c[i-1],key);
 }
 
-const void *_B_tree_successor(B_tree *T,B_node *x,const void *key){
+void *_B_tree_successor(B_tree *T,B_node *x,const void *key){
   int i = 0;
-  const void *successor;
+  void *successor;
   while (i < x->n && (T->fcmp)(T->info,key,x->key[i]) >= 0) i++;
   if (x->leaf)
     return (i < x->n ? x->key[i] : NULL);
@@ -143,8 +145,9 @@ void _B_tree_remove_key(B_tree *T,B_node *x,const void *key){
 	  y->c[T->t + i] = z->c[i];
 	  free(z->key);
 	  free(z->c);
+	  free(z);
 	}
-	_B_tree_delete(y,key);
+	_B_tree_remove_key(T,y,key);
       }
     }
   }
@@ -204,7 +207,7 @@ void _B_tree_remove_key(B_tree *T,B_node *x,const void *key){
 	free(z);
       }
     }
-    _B_tree_remove_key(y,key);
+    _B_tree_remove_key(T,y,key);
   }
 }
 
@@ -247,7 +250,7 @@ void B_tree_split_child(B_tree *T,B_node *x,int i){
   x->n++;
 }
 
-void B_tree_insert_nonfull(B_tree *T,B_node *x,int key){
+void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key){
   int i = x->n;
   if (x->leaf) {
     printf("Es hoja en nodo de tamaño %d\n",x->n);
@@ -266,30 +269,6 @@ void B_tree_insert_nonfull(B_tree *T,B_node *x,int key){
       if (key > x->key[i]) i++;
     }
     B_tree_insert_nonfull(T,x->c[i],key);
-  }
-}
-
-void B_tree_delete(B_tree *T,int key){
-  int i;
-  B_node *r;
-  r = T->root;
-  if (r->leaf) {
-    _B_tree_delete(r,key);
-  }
-  else {
-    i = r->n;
-    while (i > 0 && key < r->key[i-1])
-      i--;
-    if(key == r->key[i-1]){
-      
-    }
-    else {
-      if(r->c[i]->n >= T->t)
-	_B_tree_delete(r->c[i],key);
-      else {
-      
-      }
-    }
   }
 }
 
@@ -373,6 +352,7 @@ void gnuplot(B_tree *T){
   pclose(gnuPipe);
 }
 
+/*
 int main(int argc,char *argv[]){
   int i,M;
   B_tree *T = B_tree_create(3);
@@ -383,3 +363,6 @@ int main(int argc,char *argv[]){
   free_B_tree(T);
   return 0;
 }
+*/
+
+/* eof */

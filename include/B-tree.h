@@ -38,7 +38,7 @@ struct B_node {
   /* node of a B-tree */
   int n;
   /* number of keys */
-  void *key;
+  void **key;
   /* pointer to the node array of keys */
   short int leaf;
   /* node flag:
@@ -58,10 +58,10 @@ B_node *B_tree_insert_key(B_tree *T,const void *key);
 B_node *B_tree_find_node(B_tree *T,const void *key);
 /* find node in B-tree */
 
-const void *B_tree_predecessor(B_tree *T,const void *key);
+void *B_tree_predecessor(B_tree *T,const void *key);
 /* find the predecessor node in B-tree */
 
-const void *B_tree_successor(B_tree *T,const void *key);
+void *B_tree_successor(B_tree *T,const void *key);
 /* find the successor node in B-tree */
 
 void B_tree_remove_key(B_tree *T,const void *key);

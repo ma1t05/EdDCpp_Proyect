@@ -1,6 +1,6 @@
 
 # Directorys
-OUTDIR	= ../../out
+OUTDIR	= ../out
 SRCDIR = src
 INCDIR = include
 
