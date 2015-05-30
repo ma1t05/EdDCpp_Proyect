@@ -1,6 +1,6 @@
 
 #include "point.h"
-#define ALPHA 0.25
+#include "random_selection.h"
 
 /************************************************************
  * Realiza una evaluacion, de un subconjunto aleatorio 
@@ -13,6 +13,7 @@ point* random_selection(point *set,int k,point *r) {
   while (l > 0) {
     i = rand() % k;
     if (dist(r,&(set[i])) < dist(r,&(set[j]))) j = i;
+    l--;
   }
   return &(set[j]);
 }
