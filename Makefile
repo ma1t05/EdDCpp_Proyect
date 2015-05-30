@@ -20,7 +20,8 @@ OBJSET = \
 	$(OUTDIR)/arrdin.o \
 	$(OUTDIR)/point.o \
 	$(OUTDIR)/uniform.o \
-	$(OUTDIR)/B-tree.o
+	$(OUTDIR)/B-tree.o \
+	$(OUTDIR)/random_selection.o
 # ------------------------------------------------------------
 
 main: $(OBJSET)
@@ -42,6 +43,9 @@ $(OUTDIR)/uniform.o: $(SRCDIR)/uniform.c
 
 $(OUTDIR)/B-tree.o: $(SRCDIR)/B-tree.c
 	$(CC) -c $(CFLAGS) $(SRCDIR)/B-tree.c -o $(OUTDIR)/B-tree.o
+
+$(OUTDIR)/random_selection.o: $(SRCDIR)/random_selection.c
+	$(CC) -c $(CFLAGS) $(SRCDIR)/random_selection.c -o $(OUTDIR)/random_selection.o
 
 .PHONY: clean
 
