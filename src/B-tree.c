@@ -30,8 +30,11 @@ B_tree* B_tree_create_tree (int t,int (*fcmp)(void *info,const void *key1,const 
   T->t = t;
   T->root = x;
   T->fcmp = fcmp;
-  T->info = NULL;
+  T->info = &(T->t);
   T->size = 0;
+  /* Use of count comparations */
+  T->cont.cont_comp = 0;
+  T->cont.cont_dist = 0;
   return T;
 }
 
@@ -79,8 +82,12 @@ void *B_tree_successor(B_tree *T,const void *key){
 
 B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
   int i = 0;
-  while(i <= x->n && (T->fcmp)(T->info,key,(x->key)[i]) > 0) i++;
-  if (i <= x->n && (T->fcmp)(T->info,key,x->key[i]) == 0)
+  while(i < x->n && (T->fcmp)(T->info,key,(x->key)[i]) > 0) {
+    /* Comparations */ T->cont.cont_comp++;
+    i++;
+  }
+  /* Comparations */ T->cont.cont_comp += 2;
+  if (i < x->n && (T->fcmp)(T->info,key,x->key[i]) == 0)
     return x;
   if (x->leaf)
     return NULL;
@@ -88,21 +95,33 @@ B_node *_B_tree_find_node(B_tree *T,B_node *x,const void *key) {
 }
 
 void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key){
-  int i = x->n;
-  const void *predecessor;
-  while (i > 0 && (T->fcmp)(T->info,x->key[i-1],key) >= 0) i--;
+  int i = x->n - 1;
+  void *predecessor;
+  while (i >= 0 && (T->fcmp)(T->info,x->key[i],key) >= 0) {
+    /* Comparations */ T->cont.cont_comp++;
+    i--;
+  }
   if (x->leaf)
-    return (i > 0 ? x->key[i-1] : NULL);
-  return _B_tree_predecessor(T,x->c[i-1],key);
+    return (i >= 0 ? x->key[i] : NULL);
+  predecessor = _B_tree_predecessor(T,x->c[i+1],key);
+  if (predecessor == NULL && i >= 0)
+    predecessor = x->key[i];
+  return predecessor;
 }
 
 void *_B_tree_successor(B_tree *T,B_node *x,const void *key){
   int i = 0;
   void *successor;
-  while (i < x->n && (T->fcmp)(T->info,key,x->key[i]) >= 0) i++;
+  while (i < x->n && ((T->fcmp)(T->info,key,x->key[i]) >= 0)) {
+    /* Comparations */ T->cont.cont_comp++;
+    i++;
+  }
   if (x->leaf)
     return (i < x->n ? x->key[i] : NULL);
-  return  _B_tree_successor(T,x->c[i],key);
+  successor = _B_tree_successor(T,x->c[i],key);
+  if (successor == NULL && i < x->n)
+    successor = x->key[i];
+  return successor;
 }
 
 void B_tree_remove_key(B_tree *T,const void *key){
@@ -113,8 +132,14 @@ void _B_tree_remove_key(B_tree *T,B_node *x,const void *key){
   int i = x->n - 1,j;
   const void *k;
   B_node *y,*z;
-  while (i > 0 && (T->fcmp)(T->info,key,x->key[i]) < 0) i--;
+  while (i > 0 && (T->fcmp)(T->info,key,x->key[i]) < 0) {
+    /* Comparations */
+    T->cont.cont_comp++;
+    i--;
+  }
   if ((T->fcmp)(T->info,key,x->key[i]) == 0) {
+    /* Comparations */
+    T->cont.cont_comp++;
     if (x->leaf){ /* Case 1 */
       for(;i < x->n;i++)
 	x->key[i-1] = x->key[i];
@@ -152,6 +177,8 @@ void _B_tree_remove_key(B_tree *T,B_node *x,const void *key){
     }
   }
   else { /* Case 3 */
+    /* Comparations */
+    T->cont.cont_comp++;
     y = ((T->fcmp)(T->info,key,x->key[i]) < 0 ? x->c[i] : x->c[++i]);
     if (y->n < T->t) {
       if (i < x->n && x->c[i+1]->n >= T->t) {
@@ -229,7 +256,7 @@ void _B_tree_delete_node(B_node *x){
 void B_tree_split_child(B_tree *T,B_node *x,int i){
   int j;
   B_node *y,*z;
-  printf("Comienza split child en posicion %d\n",i);
+  /*printf("Comienza split child en posicion %d\n",i); */
   z = _B_tree_create_node(T->t);
   y = x->c[i];
   z->leaf = y->leaf;
@@ -241,11 +268,11 @@ void B_tree_split_child(B_tree *T,B_node *x,int i){
       z->c[j] = y->c[j+T->t];
   }
   y->n = T->t - 1;
-  for(j = x->n;j > i+1;j--)
+  for(j = x->n;j > i;j--) {
     x->c[j+1] = x->c[j];
-  x->c[i+1] = z;
-  for(j = x->n;j > i;j--)
     x->key[j] = x->key[j-1];
+  }
+  x->c[i+1] = z;
   x->key[i] = y->key[T->t - 1];
   x->n++;
 }
@@ -253,17 +280,22 @@ void B_tree_split_child(B_tree *T,B_node *x,int i){
 void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key){
   int i = x->n;
   if (x->leaf) {
-    printf("Es hoja en nodo de tamaño %d\n",x->n);
-    while (i > 0 && key < x->key[i-1])
+    /*printf("Comienza insert nonfull en hoja\n");*/
+    while (i > 0 && (T->fcmp)(T->info,key,x->key[i-1]) < 0) {
+      /* Comparations */
+      T->cont.cont_comp++;
       x->key[i] = x->key[--i]; /* Precaucion!, validar orden de aplicacion */
-    printf("Se detiene en poscion %d\n",i);
+    }
     x->key[i] = key;
     x->n++;
-    printf("Agrego clave %d en poscion %d\n",key,i);
   }
   else {
-    while (i > 0 && key < x->key[i-1])
+    /*printf("Comienza insert nonfull en nodo\n");*/
+    while (i > 0 && (T->fcmp)(T->info,key,x->key[i-1]) < 0) {
+      /* Comparations */
+      T->cont.cont_comp++;
       i--;
+    }
     if (x->c[i]->n == 2 * T->t - 1) {
       B_tree_split_child(T,x,i);
       if (key > x->key[i]) i++;
@@ -337,7 +369,7 @@ void gnuplot(B_tree *T){
   fclose(boxes);
 
   fprintf(gnuPipe,"set term svg\n");
-  fprintf(gnuPipe,"set output 'B_tree_%d.svg'\n",time(NULL));
+  fprintf(gnuPipe,"set output 'B_tree_%d.svg'\n",T->t);
   fprintf(gnuPipe,"unset key\n");
   fprintf(gnuPipe,"unset border\n");
   fprintf(gnuPipe,"unset yzeroaxis\n");
@@ -345,7 +377,7 @@ void gnuplot(B_tree *T){
   fprintf(gnuPipe,"unset ytics\n");
   fprintf(gnuPipe,"unset ztics\n");
   fprintf(gnuPipe,"plot ");
-  fprintf(gnuPipe,"'B_nodes.dat' using 1:2:3 with labels");
+  fprintf(gnuPipe,"'B_nodes.dat' using 1:2 with points");
   fprintf(gnuPipe,", 'B_edges.dat' using 1:2:3:4 with vectors filled head linecolor rgb \"dark-blue\"");
   fprintf(gnuPipe,", 'B_boxes.dat' using 1:2:3:4 with vectors nohead linecolor rgb \"red\"");
   fprintf(gnuPipe,"\n");
