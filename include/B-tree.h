@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "point.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -32,6 +33,8 @@ struct B_tree {
   /* transit pointer passed to the routine fcmp */
   int size;
   /* the tree size (the total number of nodes) */
+  iterations cont;
+  /* add atribute to count the numer of comparations and calcs */
 };
 
 struct B_node {
