@@ -15,7 +15,9 @@ struct cuadrante {
   float y_min,y_max;
   arrdin *points;
   int is_leaf;
+  int max_points;
   struct cuadrante *c_00,*c_01,*c_11,*c_10;
+  iterations cont; 
 };
 
 typedef struct cuadrante cuadrante;
@@ -29,13 +31,10 @@ typedef struct cuadrante cuadrante;
   |_ _ |_ _ _|
  */
 
-cuadrante* cuadrante_crea(float,float,float,float);
-int cuadrante_add(cuadrante*,point*);
-void cuadrante_divide(cuadrante*);
-cuadrante* cuadrante_test(point*,int);
-void cuadrante_printf(cuadrante*,int);
+cuadrante* cuadrante_crea(point*,int,int);
 point* cuadrante_search(cuadrante*,point*);
-point* closest_point(arrdin*,point*);
+int cuadrante_add(cuadrante*,point*);
+void cuadrante_printf(cuadrante*,int);
 void cuadrante_free(cuadrante*);
 
 #endif
