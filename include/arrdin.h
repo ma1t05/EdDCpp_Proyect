@@ -2,6 +2,8 @@
 #ifndef _ARRDIN_H_
 #define _ARRDIN_H_
 
+#include <stdlib.h>
+
 struct arrdin {
   void **a;
   int elements;
