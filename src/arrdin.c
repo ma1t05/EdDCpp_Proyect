@@ -1,5 +1,4 @@
 
-#include <stdlib.h>
 #include "arrdin.h"
 
 arrdin* arrdin_create() {
@@ -38,6 +37,7 @@ void arrdin_remove(arrdin *c,void *e) {
   for (i = 0;i < c->size;i++) {
     if (c->a[i] == e) {
       c->a[i] = NULL;
+      c->elements--;
       return;
     }
   }
