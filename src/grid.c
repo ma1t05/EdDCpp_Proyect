@@ -4,124 +4,289 @@
  * - a la matriz de contenedores
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include "point.h"
 #include "grid.h"
+
+contenedor *_grid_create_bin(float,float);
 
 grid* grid_create(point* puntos,int k){
   
   int i,j,l;
-  int r,s;
+  double r,s;
+  double dx,dy;
+  double xrange,yrange;
 
   grid *map;
   contenedor *bin;
   
   map = (grid*)malloc(sizeof(grid));
-  printf("Calculando n\n");
+  //printf("Calculando n\n");
   map->n = map->m = ceil((float)k / log((float)k));
-  printf("Se obtuvo %d\n",map->n);
+  //printf("Se obtuvo %d\n",map->n);
   map->xmin = puntos[0].x; map->xmax = puntos[0].x;
   map->ymin = puntos[0].y; map->ymax = puntos[0].y;
-  for (i = 1;i < k;i++) {
-    if (puntos[i].x < map->xmin) map->xmin = puntos[i].x;
-    if (puntos[i].x > map->xmax) map->xmax = puntos[i].x;
-    if (puntos[i].y > map->ymin) map->ymin = puntos[i].y;
-    if (puntos[i].y > map->ymax) map->ymax = puntos[i].y;
+  for (l = 1;l < k;l++) {
+    if (puntos[l].x < map->xmin) map->xmin = puntos[l].x;
+    if (puntos[l].x > map->xmax) map->xmax = puntos[l].x;
+    if (puntos[l].y < map->ymin) map->ymin = puntos[l].y;
+    if (puntos[l].y > map->ymax) map->ymax = puntos[l].y;
   }
-  printf("Obtiene maximos y minimos\n");
+  //printf("Obtiene maximos y minimos\n");
+  //printf("xmin: %.2f\txmax: %.2f\n",map->xmin,map->xmax);
+  //printf("ymin: %.2f\tymax: %.2f\n",map->ymin,map->ymax);
 
+  xrange = map->xmax - map->xmin;
+  yrange = map->ymax - map->ymin;
+  map->xmin -= 0.05 * xrange;
+  map->xmax += 0.05 * xrange;
+  map->ymin -= 0.05 * yrange;
+  map->ymax += 0.05 * yrange;
+  
   dx = (map->xmax - map->xmin) / map->n;
   dy = (map->ymax - map->ymin) / map->m;
-  s = (dx > dy ? dx : dy);
-
-  r = (map->xmax - map->xmin) % s;
-  printf("%d divisiones con residuo %d\n",s,r);
-  if (r > 0) {
-    if (s - r > 1) {
-      map->xmin -= (s - r) / 2;
-      map->xmax += (s - r) / 2;
-      r = (s - r) % 2;
-    }
-    if (r > 0)
-      map->xmin--;
-    map->n++;
+  
+  if (dx < dy) {
+    map->m = ceil((map->ymax - map->ymin) / dx);
+    map->delta = dx;
+    dy = (dx * map->m - (map->ymax - map->ymin));
+    map->ymax += dy * 0.5;
+    map->ymin -= dy * 0.5;
   }
-  map->delta_x = s;
-  printf("Obitne delta x %d\n",s);
-
-  s = (map->ymax - map->ymin) / map->m;
-  r = (map->ymax - map->ymin) % s;
-  if (r > 0) {
-    if (s - r > 1) {
-      map->ymin -= (s - r) / 2;
-      map->ymax += (s - r) / 2;
-      r = (s - r) % 2;
-    }
-    if (r > 0)
-      map->ymin--;
-    map->m++;
+  else {
+    map->n = ceil((map->xmax - map->xmin) / dy);
+    map->delta = dy;
+    dx = (dy * map->n - (map->xmax - map->xmin));
+    map->xmax += dx * 0.5;
+    map->xmin -= dx * 0.5;
   }
-  map->delta_y = s;
-  printf("Obitne delta y %d\n",s);
 
+  //printf("Obtiene delta de %.2f\n",map->delta);
+  //printf("Se utilizara una matrix %d x %d\n",map->n,map->m);
   map->A = (contenedor***)malloc(sizeof(contenedor**)*map->n);
   for (i = 0;i < map->n;i++) {
     map->A[i] = (contenedor**)malloc(sizeof(contenedor*)*map->m);
     for (j = 0;j < map->m;j++) map->A[i][j] = NULL;
   }
 
+  //printf("Comienza a agregar puntos\n");
   for (l = 0;l < k;l++) {
-    i = (puntos[l].x - map->xmin) / map->delta_x;
-    j = (puntos[l].y - map->ymin) / map->delta_y;
-    if (map->A[i][j] == NULL) {
-      bin = (contenedor*)malloc(sizeof(contenedor));
-      map->A[i][j] = bin;
-      bin->x0 = map->xmin + map->delta_x * i;
-      bin->y0 = map->ymin + map->delta_y * j;
-      bin->elementos = 0;
-      bin->ajustadores = NULL;
-    }
-    else bin = map->A[i][j];
-    agrega_punto(bin,&(puntos[i]));
+    grid_add_point(map,&(puntos[l]));
   }
+
+  map->cont.cont_comp = 0;
+  map->cont.cont_dist = 0;
+
+  return map;
 }
 
-void printf_mapa(mapa *map){
+void grid_add_point(grid *map,point *p) {
+  int i,j;
+  i = floor((p->x - map->xmin) / map->delta);
+  j = floor((p->y - map->ymin) / map->delta);
+  if (map->A[i][j] == NULL)
+    map->A[i][j] = _grid_create_bin
+      (map->xmin + map->delta * i /* x0 */,
+       map->ymin + map->delta * j /* y0 */);
+  arrdin_add(&(map->A[i][j]->puntos),p);
+}
+
+void grid_printf(grid *map){
   int i,j;
   for (i = 0;i < map->n;i++) {
     for (j = 0;j < map->m;j++) {
       if (map->A[i][j] == NULL)
 	printf("0");
       else
-	printf("%d",map->A[i][j]->elementos);
+	printf("%d",map->A[i][j]->puntos.elements);
     }
     printf("\n");
   }
 }
 
-void agrega_punto(contenedor *bin,point *point){
-  int i;
-  point **puntos;
-  if (bin->elementos == 0) {
-    bin->puntos = (point**)malloc(sizeof(point*));
-    bin->elementos = 1;
+point *grid_search(grid *map,point *p) {
+  int a,b;
+  int i,j;
+  int k,l;
+  int n,m;
+  contenedor *bin;
+  point *ans,*aux;
+  a = floor((p->x - map->xmin) / map->delta);
+  b = floor((p->y - map->ymin) / map->delta);
+  //printf("Comienza grid_search de (%d,%d)\n",a,b);
+  
+  /* Determina la primera n que deja dentro de grid */
+  n = 0;
+  if (a < 0) {
+    n = -a;
   }
-  puntos = bin->puntos;
-  for (i = 0;i < bin->elementos;i++) {
-    if (puntos[i] == NULL) {
-      puntos[i] = point;
-      break;
+  else if (a >= map->n) {
+    n = a - map->n + 1;
+  }
+  
+  if (b < 0) {
+    if (n == 0 || -b < n) n = -b;
+  }
+  else if (b >= map->m) {
+    if (n == 0 || b - map->m + 1 < n)
+      n = b - map->m + 1;
+  }
+  //printf("Comienza con n = %d\n",n);
+
+  /* revisa si el punto cae dentro de un bin no vacio del grid */
+  bin = (n == 0 ? map->A[a][b] : NULL);
+
+  /* Busca la primera n que tiene bins no vacios */
+  if (bin == NULL) n--;
+  /* Decrementamos n para comenzar con la primera que nos deja en el grid */
+  while (bin == NULL) {
+    n++;
+    //printf("Busca bins con n = %d\n",n);
+    i = a - n;
+    j = b - n;
+
+    /* Busca en franja horizontal superior */
+    if (j < 0) {
+      i = a + n; /* Nada donde buscar */
+    }
+    else {
+      //printf("/* Busca en franja horizontal superior */\n");
+      for (;i < a + n;i++) 
+	if(i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    }
+
+    /* Busca en franja vertical derecha */
+    if (i < map->n) {
+      //printf("/* Busca en franja vertical derecha */\n");
+      for(;j < b + n;j++)
+	if(j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    }
+    else {
+      j = b + n; /* Nada donde buscar */
+    }
+
+    /* Busca en franja horizontal inferior */
+    if (j < map->m) {
+      //printf("/* Busca en franja horizontal inferior */\n");
+      for (;i > a - n;i--)
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    }
+    else {
+      i = a - n; /* Nada donde buscar */
+    }
+
+    /* Busca en franja vertical izquierda */
+    if (i < 0) {
+      j = b- n; /* Nada donde buscar */
+    }
+    else {
+      //printf("/* Busca en franja vertical izquierda */\n");
+      for (;j > b - n;j--)
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
     }
   }
-  if (i == bin->elementos) {
-    puntos = (point**)malloc(sizeof(point*)*bin->elementos*2);
-    puntos[i] = point;
-    for (i = 0;i < bin->elementos;i++) {
-      puntos[i] = bin->puntos[i];
+  //printf("Se detuvo con n = %d\n",n);
+
+  /* Reccorer los bins para N
+     y encontrar el punto de menor distancia
+     seguir hasta llegar a la cota M
+   */
+  /* bin apunta a un contenedor no vacio de grid */
+  ans = closest_point(&(bin->puntos),p);
+  map->cont.cont_dist += bin->puntos.elements;
+
+  do {
+    i = a - n;
+    j = b - n;
+
+    /* Busca en franja horizontal superior */
+    if (j < 0) {
+      i = a + n; /* Nada donde buscar */
     }
-    bin->elementos *= 2;
-    bin->puntos = puntos;
+    else {
+      for (;i < a + n;i++) 
+	if(i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) {
+	    aux = closest_point(&(map->A[i][j]->puntos),p);
+	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
+	    if (dist(p,aux) < dist(p,ans)) ans = aux;
+	  }
+    }
+
+    /* Busca en franja vertical derecha */
+    if (i < map->n) {
+      for(;j < b + n;j++)
+	if(j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) {
+	    aux = closest_point(&(map->A[i][j]->puntos),p);
+	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
+	    if (dist(p,aux) < dist(p,ans)) ans = aux;
+	  }
+    }
+    else {
+      j = b + n; /* Nada donde buscar */
+    }
+
+    /* Busca en franja horizontal inferior */
+    if (j < map->m) {
+      for (;i > a - n;i--)
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) {
+	    aux = closest_point(&(map->A[i][j]->puntos),p);
+	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
+	    if (dist(p,aux) < dist(p,ans)) ans = aux;
+	  }
+    }
+    else {
+      i = a - n; /* Nada donde buscar */
+    }
+
+    /* Busca en franja vertical izquierda */
+    if (i < 0) {
+      j = b- n; /* Nada donde buscar */
+    }
+    else {
+      //printf("/* Busca en franja vertical izquierda */\n");
+      for (;j > b - n;j--)
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) {
+	    aux = closest_point(&(map->A[i][j]->puntos),p);
+	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
+	    if (dist(p,aux) < dist(p,ans)) ans = aux;
+	  }
+    }
+    m = ceil(dist(ans,p) / map->delta) + 2;
+    map->cont.cont_dist++;
+    //printf("n = %d con m = %d\n",n,m);
+  } while (n++ < m);
+  return ans;
+}
+
+contenedor *_grid_create_bin(float x0,float y0){
+  contenedor *bin;
+  bin = (contenedor*)malloc(sizeof(contenedor));
+  bin->x0 = x0;
+  bin->y0 = y0;
+  bin->puntos.elements = 0;
+  bin->puntos.size = 1;
+  bin->puntos.a = (void**)malloc(sizeof(void*));
+  bin->puntos.a[0] = NULL;
+  return bin;
+}
+
+void grid_free(grid *map) {
+  int i,j;
+  for (i = 0;i < map->n;i++) {
+    for (j = 0;j < map->m;j++) {
+      if (map->A[i][j] != NULL) {
+	free(map->A[i][j]->puntos.a);
+	free(map->A[i][j]);
+      }
+    }
+    free(map->A[i]);
   }
+  free(map->A);
+  free(map);
 }
