@@ -25,10 +25,11 @@ int main (int argc,char* argv[]){
   point *p;
 
   // Arreglo de puntos
-  k = read_points_file("../Q_MCLP_3283.txt",&p);
-  prueba_cuadrantes(p,k,1);
-  prueba_B_trees(p,k,1);
-  prueba_grid(p,k);
+  k = read_points_file("../Q_MCLP_324.txt",&p);
+  //printf("Prueba Cuadrantes\n");
+  prueba_cuadrantes(p,k,2);
+  //printf("Prueba Grid\n");
+  //prueba_grid(p,k);
   free(p);
   return 0;
 }
@@ -47,6 +48,7 @@ void prueba_cuadrantes(point *p,int k,int a) {
   c = (cuadrante**)malloc(sizeof(cuadrante*)*(a));
   err_c = (double*)malloc(sizeof(double)*(a));
   for (j = 0;j < a;j++) c[j] = cuadrante_crea(p,k,j+3);
+  printf("Termina creacion de cuadrantes\n");
 
   for(times = 100;times <= 10000;times += 100) {
     for (j = 0;j < a;j++) err_c[j] = 0.0;
@@ -72,7 +74,7 @@ void prueba_cuadrantes(point *p,int k,int a) {
     }
     printf("%d",times);
     for (j = 0; j < a;j++)
-      printf(" %d %d %.2f",c[j]->cont.cont_comp,c[j]->cont.cont_dist,err_c[j]);
+      printf(" %d %d %.2f",c[j]->cont.cont_comp,c[j]->cont.cont_dist,(double)c[j]->cont.cont_dist/(k*times));
     printf("\n");
   }
   free(err_c);
