@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "point.h"
-#include "arrdin.h"
+#include "arrpoint.h"
 
 typedef struct contenedor contenedor;
 typedef struct grid grid;
@@ -24,6 +23,7 @@ struct grid {
   float ymin,ymax;
   float delta;
   contenedor ***A;
+  iterations cont;
 };
 
 grid* grid_create(point*,int);
