@@ -17,6 +17,7 @@
 %\documentclass[dvipsone,ijoc]{informs3}   % if dvipsone is used, etc.
 
 % Private macros here (check that there is no clash with the style)
+\usepackage[]{algorithm2e}
 
 % Natbib setup for author-year style
 \usepackage{natbib}
@@ -124,7 +125,7 @@
 % Text of your paper here
 \section{Introduction.}
 Nearest neighbor searching is the following problem: 
-We are given a set S of n data points in a metric space, X,
+We are given a set \textit{S} of \textit{n} data points in a metric space, \texit{X},
 and the task is to preprocess these points so that,
 given any query point $q \in X$,
 the data point nearest to \textit{q} can be reported quickly.
@@ -144,8 +145,53 @@ This focusing results in an efficient representation and improved execution time
 particularly useful for performing set operations
 
 \section{Nearest Neighbor Searching using B-trees}
+B-tree is a tree data structure that keeps data sorted
+and allows searches, sequential access, insertions, 
+and deletions in logarithmic time. 
+The B-tree is a generalization of a binary search tree 
+in that a node can have more than two children (Comer 1979, p. 123).
+To store the points in the B-tree, an order relation was used.
 
 \subsection{Algorithm for B-trees}
+Given an order relation, it's easy to search the predecessor / successor,
+but we can't guarantee that any of them is the nearest.
+Then we need to keep looking, to ensure we have the nearest point.
+Since we're using a relation of lexicographical order,
+we can stop lookin for points, 
+when the difference betwen the first coordinate,
+is greater than the minimum distance found.
+
+\begin{algorithm}[t]
+  \KwData{T: B-tree with the points, p: point to find its nearest neighbor}
+  \KwResult{the nearest neighbor of p}
+  x = find-node(p)\;
+  \lIf{x != NULL}{return p\;}
+  ans = NULL\;
+  r = s = p\;
+  \While{r != NULL or s != NULL}{
+    \uIf{r != NULL}{
+      r = predecessor(T,r)\;
+      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,r)}{ans = r\;}
+      x = find-node(r)\;
+      \uIf{x.leaf}{
+        \ForEach{r child of x}{\lIf{dist(ans,p) $>$ dist(r,p)}{ans = r\;}}
+        r = x.first-child\;
+      }
+      \lIf{dist(ans,p) $<$ p.x - r.x}{r = NULL\;}
+    }
+    \uIf{s != NULL}{
+      s = successor(T,s)\;
+      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,s)}{ans = s\;}
+      x = find-node(r)\;
+      \uIf{x.leaf}{
+        \ForEach{s child of x}{\lIf{dist(ans,p) $>$ dist(p,s)}{ans = s\;}}
+        s = x.last-child\;
+      }
+      \lIf{dist(ans,p) $<$ s.x - p.x}{s = NULL\;}
+    }    
+  }
+  \caption{Nearest Neighbor in B-tree}
+\end{algorithm}
 
 \section{Quadtree}
 The term quadtree is used to describe a class of hierarchical data structures whose
