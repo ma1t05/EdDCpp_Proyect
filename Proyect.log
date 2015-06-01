@@ -1,3 +1,14 @@
+20150531
+Dependencias:
+point < stdlib stdio math
+arrdin < stdlib
+uniform < stdlib time math
+
+mapa < point arrdin
+grid < point arrdin
+B-tree < point
+
+
 20150430
 Ideas para almacenar puntos
  Un arbol que divida el mapa en cuadrantes, 
