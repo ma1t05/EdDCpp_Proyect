@@ -2,6 +2,10 @@
 #ifndef _POINT_H_
 #define _POINT_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
 struct point {
   float x,y; /* x and y coords of point */
 };
