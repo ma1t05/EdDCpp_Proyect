@@ -107,6 +107,7 @@ point *grid_search(grid *map,point *p) {
   int i,j;
   int k,l;
   int n,m;
+  double d;
   contenedor *bin;
   point *ans,*aux;
   a = floor((p->x - map->xmin) / map->delta);
@@ -138,129 +139,216 @@ point *grid_search(grid *map,point *p) {
   if (bin == NULL) n--;
   /* Decrementamos n para comenzar con la primera que nos deja en el grid */
   while (bin == NULL) {
-    n++;
-    //printf("Busca bins con n = %d\n",n);
+    n++; k = 0;
+
+    i = a + n;
+    j = b;
+    if (i < map->n) 
+      if (j >= 0 && j < map->m) 
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+
+    i = a;
+    j = b + n;
+    if (j < map->m)
+      if (i >= 0 && i < map->n)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
     i = a - n;
+    j = b;
+    if (i >= 0)
+      if (j >= 0 && j < map->m)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+    i = a;
     j = b - n;
+    if (j >= 0)
+      if (i >= 0 && i < map->n)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
 
-    /* Busca en franja horizontal superior */
-    if (j < 0) {
-      i = a + n; /* Nada donde buscar */
-    }
-    else {
-      //printf("/* Busca en franja horizontal superior */\n");
-      for (;i < a + n;i++) 
-	if(i >= 0 && i < map->n)
+    while (b == NULL && ++k < n) {
+
+      i = a + n;
+      if (i < map->n) {
+	j = b + k;
+	if (j >= 0 && j < map->m) 
 	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-    }
-
-    /* Busca en franja vertical derecha */
-    if (i < map->n) {
-      //printf("/* Busca en franja vertical derecha */\n");
-      for(;j < b + n;j++)
-	if(j >= 0 && j < map->m)
+	j = b - k;
+	if (j >= 0 && j < map->m) 
 	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-    }
-    else {
-      j = b + n; /* Nada donde buscar */
+      }
+
+      j = b + n;
+      if (j < map->m) {
+	i = a + k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	i = a - k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      }
+    
+      i = a - n;
+      if (i >= 0) {
+	j = b + k;
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	j = b - k;
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      }
+    
+      j = b - n;
+      if (j >= 0) {
+	i = a + k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	i = a - k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+
+      }
+      
     }
 
-    /* Busca en franja horizontal inferior */
-    if (j < map->m) {
-      //printf("/* Busca en franja horizontal inferior */\n");
-      for (;i > a - n;i--)
+    if (bin == NULL) {
+      i = a + n;
+      j = b + n;
+      if (i < map->n) 
+	if (j >= 0 && j < map->m) 
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+
+      i = a - n;
+      j = b + n;
+      if (j < map->m)
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+      i = a - n;
+      j = b - n;
+      if (i >= 0)
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+      i = a + n;
+      j = b - n;
+      if (j >= 0)
 	if (i >= 0 && i < map->n)
 	  if (map->A[i][j] != NULL) bin = map->A[i][j];
     }
-    else {
-      i = a - n; /* Nada donde buscar */
-    }
 
-    /* Busca en franja vertical izquierda */
-    if (i < 0) {
-      j = b- n; /* Nada donde buscar */
-    }
-    else {
-      //printf("/* Busca en franja vertical izquierda */\n");
-      for (;j > b - n;j--)
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-    }
   }
-  //printf("Se detuvo con n = %d\n",n);
+  printf("Se detuvo con n = %d y k = %d\n",n,k);
 
-  /* Reccorer los bins para N
-     y encontrar el punto de menor distancia
-     seguir hasta llegar a la cota M
-   */
   /* bin apunta a un contenedor no vacio de grid */
   ans = closest_point(&(bin->puntos),p);
-  map->cont.cont_dist += bin->puntos.elements;
+  map->cont.cont_dist += bin->puntos.elements + 1;
+  d = dist(p,ans);
 
-  do {
+  m = n;
+  l = k;
+
+  if (l == 0) {
+    i = a + n;
+    j = b;
+    if (i < map->n) 
+      if (j >= 0 && j < map->m) 
+	if (map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux);
+	    ans = aux;
+	  }
+
+    i = a;
+    j = b + n;
+    if (j < map->m)
+      if (i >= 0 && i < map->n)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
     i = a - n;
+    j = b;
+    if (i >= 0)
+      if (j >= 0 && j < map->m)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+    i = a;
     j = b - n;
+    if (j >= 0)
+      if (i >= 0 && i < map->n)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
 
-    /* Busca en franja horizontal superior */
-    if (j < 0) {
-      i = a + n; /* Nada donde buscar */
-    }
-    else {
-      for (;i < a + n;i++) 
-	if(i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) {
-	    aux = closest_point(&(map->A[i][j]->puntos),p);
-	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
-	    if (dist(p,aux) < dist(p,ans)) ans = aux;
-	  }
-    }
+    while (b == NULL && ++k < n) {
 
-    /* Busca en franja vertical derecha */
-    if (i < map->n) {
-      for(;j < b + n;j++)
-	if(j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) {
-	    aux = closest_point(&(map->A[i][j]->puntos),p);
-	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
-	    if (dist(p,aux) < dist(p,ans)) ans = aux;
-	  }
-    }
-    else {
-      j = b + n; /* Nada donde buscar */
-    }
+      i = a + n;
+      if (i < map->n) {
+	j = b + k;
+	if (j >= 0 && j < map->m) 
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	j = b - k;
+	if (j >= 0 && j < map->m) 
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      }
 
-    /* Busca en franja horizontal inferior */
-    if (j < map->m) {
-      for (;i > a - n;i--)
+      j = b + n;
+      if (j < map->m) {
+	i = a + k;
 	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) {
-	    aux = closest_point(&(map->A[i][j]->puntos),p);
-	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
-	    if (dist(p,aux) < dist(p,ans)) ans = aux;
-	  }
-    }
-    else {
-      i = a - n; /* Nada donde buscar */
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	i = a - k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      }
+    
+      i = a - n;
+      if (i >= 0) {
+	j = b + k;
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	j = b - k;
+	if (j >= 0 && j < map->m)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      }
+    
+      j = b - n;
+      if (j >= 0) {
+	i = a + k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	i = a - k;
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+
+      }
+      
     }
 
-    /* Busca en franja vertical izquierda */
-    if (i < 0) {
-      j = b- n; /* Nada donde buscar */
-    }
-    else {
-      //printf("/* Busca en franja vertical izquierda */\n");
-      for (;j > b - n;j--)
+    if (bin == NULL) {
+      i = a + n;
+      j = b + n;
+      if (i < map->n) 
+	if (j >= 0 && j < map->m) 
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+
+      i = a - n;
+      j = b + n;
+      if (j < map->m)
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+      i = a - n;
+      j = b - n;
+      if (i >= 0)
 	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) {
-	    aux = closest_point(&(map->A[i][j]->puntos),p);
-	    map->cont.cont_dist += map->A[i][j]->puntos.elements + 2;
-	    if (dist(p,aux) < dist(p,ans)) ans = aux;
-	  }
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+    
+      i = a + n;
+      j = b - n;
+      if (j >= 0)
+	if (i >= 0 && i < map->n)
+	  if (map->A[i][j] != NULL) bin = map->A[i][j];
     }
-    m = ceil(dist(ans,p) / map->delta) + 2;
-    map->cont.cont_dist++;
-    //printf("n = %d con m = %d\n",n,m);
-  } while (n++ < m);
+  } while ( (m-1)*(m-1) + (l-1)*(l-1) < d)
   return ans;
 }
 
