@@ -3,8 +3,8 @@
 #define _MAPA_H_
 
 #include <stdlib.h>
-#include "arrdin.h"
-#include "point.h"
+#include "arrpoint.h"
+
 #define MAX_POINTS 4
 #define TRUE 1
 #define FALSE 0
