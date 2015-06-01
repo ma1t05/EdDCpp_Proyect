@@ -5,6 +5,7 @@
 #include "mapa.h"
 #include "uniform.h"
 #include "B-tree.h"
+#include "grid.h"
 #include "random_selection.h"
 
 #define EPSILON 0.001
@@ -17,18 +18,22 @@ void B_tree_printf(B_node*,int);
 void B_tree_show(B_tree*,point*);
 void prueba_cuadrantes(point*,int,int);
 void prueba_B_trees(point*,int,int);
+void prueba_grid(point*,int);
 
 int main (int argc,char* argv[]){
   int k;
   point *p;
 
   // Arreglo de puntos
-  k = read_points_file("../Q_MCLP_30.txt",&p);
-  prueba_B_trees(p,k,2);
+  k = read_points_file("../Q_MCLP_3283.txt",&p);
+  prueba_cuadrantes(p,k,1);
+  prueba_B_trees(p,k,1);
+  prueba_grid(p,k);
   free(p);
   return 0;
 }
 
+/* Quadtree */
 void prueba_cuadrantes(point *p,int k,int a) {
   int i,j;
   point q;
@@ -62,21 +67,20 @@ void prueba_cuadrantes(point *p,int k,int a) {
 	if (d > 0.0)
 	  err_c[j] += dist(&q,c_ans) / d - 1.0;
 	else 
-	  if (dist(&q,c_ans) > 0) err_c[j-3] += 1.0;
+	  if (dist(&q,c_ans) > 0) err_c[j] += 1.0;
       }
     }
     printf("%d",times);
-    for (j = 3; j < a;j++)
-      printf(" %d %d %.2f",c[j-3]->cont.cont_comp,c[j-3]->cont.cont_dist,err_c[j-3]);
+    for (j = 0; j < a;j++)
+      printf(" %d %d %.2f",c[j]->cont.cont_comp,c[j]->cont.cont_dist,err_c[j]);
     printf("\n");
   }
   free(err_c);
-  for (j = 3;j < a;j++)
-    cuadrante_free(c[j-3]);
+  for (j = 0;j < a;j++)
+    cuadrante_free(c[j]);
   free(c);
 }
 
-/* cuadrante usage */
 void look_for_points(cuadrante *c,int n){
   int i;
   point *p,*q;
@@ -272,3 +276,29 @@ void B_tree_show(B_tree* T,point *p) {
     r = B_tree_predecessor(T,p);
   } while (r != NULL);
 }
+
+/* Grid usage */
+void prueba_grid(point *p,int k) {
+  int i;
+  grid *G;
+  double d,err;
+  point q,*e_ans,*ans;
+  G = grid_create(p,k);
+  
+  // Punto aleatorio dentro de la region
+  for (i = 0; i < 100;i++) {
+    q.x = unif(G->xmin,G->xmax); 
+    q.y = unif(G->ymin,G->ymax);
+  
+    e_ans = nearest_point(p,k,&q);
+    d = dist(&q,e_ans);
+    ans = grid_search(G,&q);
+    err = dist(&q,ans) / d - 1.0;
+  }
+  printf("Uso de dist prom: %.2f\n",G->cont.cont_dist * 0.01);
+  
+  grid_free(G);
+}
+
+
+
