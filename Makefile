@@ -21,7 +21,9 @@ OBJSET = \
 	$(OUTDIR)/point.o \
 	$(OUTDIR)/uniform.o \
 	$(OUTDIR)/B-tree.o \
-	$(OUTDIR)/random_selection.o
+	$(OUTDIR)/random_selection.o \
+	$(OUTDIR)/grid.o \
+	$(OUTDIR)/arrpoint.o
 # ------------------------------------------------------------
 
 main: $(OBJSET)
@@ -46,6 +48,12 @@ $(OUTDIR)/B-tree.o: $(SRCDIR)/B-tree.c
 
 $(OUTDIR)/random_selection.o: $(SRCDIR)/random_selection.c
 	$(CC) -c $(CFLAGS) $(SRCDIR)/random_selection.c -o $(OUTDIR)/random_selection.o
+
+$(OUTDIR)/grid.o: $(SRCDIR)/grid.c
+	$(CC) -c $(CFLAGS) $(SRCDIR)/grid.c -o $(OUTDIR)/grid.o
+
+$(OUTDIR)/arrpoint.o: $(SRCDIR)/arrpoint.c
+	$(CC) -c $(CFLAGS) $(SRCDIR)/arrpoint.c -o $(OUTDIR)/arrpoint.o
 
 .PHONY: clean
 
