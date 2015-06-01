@@ -1,7 +1,4 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include "point.h"
 
 float dist(point *a,point *b) {
