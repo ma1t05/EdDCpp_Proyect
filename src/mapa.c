@@ -32,7 +32,7 @@ int cuadrante_add(cuadrante *c,point *p){
   if (c->points->elements+1 > c->max_points && c->is_leaf)
     cuadrante_divide(c);
 
-  arrdin_add(c->points,p); // casting to void??
+  arrdin_add(c->points,p);
   
   if (!(c->is_leaf)) {
     ans = FALSE;
@@ -120,50 +120,78 @@ void cuadrante_printf(cuadrante* c,int depth){
 
 point* cuadrante_search(cuadrante* c,point *p) {
   point *r;
-  double d; /* shorter distance to container limits */
+  cuadrante *a,*b;
   r = NULL;
+  if (p->x < c->x_min || p->x > c->x_max || p->y < c->y_min || p->y > c->y_max) {
+    c->cont.cont_comp++;
+    return NULL;
+  }
   if (c->is_leaf) {
     /* Calcula dist */ c->cont.cont_dist += c->points->elements; 
     r = closest_point(c->points,p);
   }
   else {
-    /* Compara */ c->cont.cont_comp++;
-    if (p->x < c->x_0) {
-      /* Compara */ c->cont.cont_comp++;
-      d = p->x - c->x_min;
-      if (d > c->c_00->x_max - p->x) d = c->c_00->x_max - p->x;
-      if (p->y < c->y_0) {
-	r = cuadrante_search(c->c_00,p);
-	if (d > p->y - c->y_min) d = p->y - c->y_min;
-	if (d > c->c_00->y_max - p->y) d = c->c_00->y_max - p->y;
+    /* Compara */ c->cont.cont_comp += 3;
+    if (abs(p->x - c->x_0) > abs(p->y - c->y_0)) {
+      if (p->x < c->x_0) {
+	if (p->y < c->y_0) {
+	  a = c->c_00;
+	  b = c->c_01;
+	}
+	else {
+	  a = c->c_01;
+	  b = c->c_00;
+	}
       }
       else {
-	r = cuadrante_search(c->c_10,p);
-	if (d > c->y_max - p->y) d = c->y_max - p->y;
-	if (d > p->y - c->c_10->y_min) d = p->y - c->c_10->y_min;
+	if (p->y < c->y_0) {
+	  a = c->c_10;
+	  b = c->c_11;
+	}
+	else {
+	  a = c->c_11;
+	  b = c->c_10;
+	}
       }
     }
     else {
-      /* Compara coordenadas */
-      c->cont.cont_comp++;
-      d = c->x_max - p->x;
-      if (d > p->x - c->c_11->x_min) d = p->x - c->c_11->x_min;
       if (p->y < c->y_0) {
-	r = cuadrante_search(c->c_01,p);
-	if (d > p->y - c->y_min) d = p->y - c->y_min;
-	if (d > c->c_01->y_max - p->y) d = c->c_01->y_max - p->y;
+	if (p->x < c->x_0) {
+	  a = c->c_00;
+	  b = c->c_10;
+	}
+	else {
+	  a = c->c_10;
+	  b = c->c_00;
+	}
       }
       else {
-	r = cuadrante_search(c->c_11,p);
-	if (d > c->y_max - p->y) d = c->y_max - p->y;
-	if (d > p->y - c->c_11->y_min) d = p->y - c->c_11->y_min;
+	if (p->x < c->x_0) {
+	  a = c->c_01;
+	  b = c->c_11;
+	}
+	else {
+	  a = c->c_11;
+	  b = c->c_01;
+	}
       }
     }
-    if (r == NULL || dist(r,p) > d) {
-      /* Calcula dist contra c->points->elements */
-      c->cont.cont_dist += c->points->elements; 
-      r = closest_point(c->points,p);
+    if (a->points->elements > 0) {
+      a->cont.cont_comp = 0;
+      a->cont.cont_dist = 0;
+      r = cuadrante_search(a,p);
+      c->cont.cont_comp += a->cont.cont_comp;
+      c->cont.cont_dist += a->cont.cont_dist;
     }
+    if (r == NULL && b->points->elements > 0) {
+      b->cont.cont_comp = 0;
+      b->cont.cont_dist = 0;
+      r = cuadrante_search(b,p);
+      c->cont.cont_comp += b->cont.cont_comp;
+      c->cont.cont_dist += b->cont.cont_dist;
+    }
+    if (r == NULL)
+      r = closest_point(c->points,p);
   }
   return r;
 }
