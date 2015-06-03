@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 
 struct point {
   float x,y; /* x and y coords of point */
@@ -20,6 +21,7 @@ typedef struct point point;
 typedef struct iterations iterations;
 
 float dist(point*,point*);
-int read_points_file(const char*,point**);
+int read_points_file_xyd(const char*,point**);
+point *point_generate_random_instance(int);
 
 #endif
