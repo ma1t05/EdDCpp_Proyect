@@ -137,107 +137,96 @@ point *grid_search(grid *map,point *p) {
 
   /* Busca la primera n que tiene bins no vacios */
   if (bin == NULL) n--;
+  k = 0;
   /* Decrementamos n para comenzar con la primera que nos deja en el grid */
   while (bin == NULL) {
     n++; k = 0;
-
     i = a + n;
     j = b;
-    if (i < map->n) 
-      if (j >= 0 && j < map->m) 
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL)
+      bin = map->A[i][j];
 
     i = a;
     j = b + n;
-    if (j < map->m)
-      if (i >= 0 && i < map->n)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    if (j < map->m && i >= 0 && i < map->n && map->A[i][j] != NULL)
+      bin = map->A[i][j];
     
     i = a - n;
     j = b;
-    if (i >= 0)
-      if (j >= 0 && j < map->m)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    if (i >= 0 && j >= 0 && j < map->m && map->A[i][j] != NULL) 
+      bin = map->A[i][j];
     
     i = a;
     j = b - n;
-    if (j >= 0)
-      if (i >= 0 && i < map->n)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
+    if (j >= 0 && i >= 0 && i < map->n && map->A[i][j] != NULL) 
+      bin = map->A[i][j];
 
-    while (b == NULL && ++k < n) {
-
+    while (bin == NULL && ++k < n) {
       i = a + n;
       if (i < map->n) {
 	j = b + k;
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL) 
+	  bin = map->A[i][j];
 	j = b - k;
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL)
+	  bin = map->A[i][j];
       }
 
       j = b + n;
       if (j < map->m) {
 	i = a + k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL)
+	  bin = map->A[i][j];
 	i = a - k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) 
+	  bin = map->A[i][j];
       }
     
       i = a - n;
       if (i >= 0) {
 	j = b + k;
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL)
+	  bin = map->A[i][j];
 	j = b - k;
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL)
+	  bin = map->A[i][j];
       }
     
       j = b - n;
       if (j >= 0) {
 	i = a + k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL)
+	  bin = map->A[i][j];
 	i = a - k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) 
+	  bin = map->A[i][j];
       }
-      
     }
 
     if (bin == NULL) {
       i = a + n;
       j = b + n;
-      if (i < map->n) 
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL)
+	bin = map->A[i][j];
 
       i = a - n;
       j = b + n;
-      if (j < map->m)
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (j < map->m && i >= 0 && i < map->n && map->A[i][j] != NULL)
+	bin = map->A[i][j];
     
       i = a - n;
       j = b - n;
-      if (i >= 0)
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (i >= 0 && j >= 0 && j < map->m && map->A[i][j] != NULL)
+	bin = map->A[i][j];
     
       i = a + n;
       j = b - n;
-      if (j >= 0)
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (j >= 0 && i >= 0 && i < map->n && map->A[i][j] != NULL)
+	bin = map->A[i][j];
     }
 
   }
-  printf("Se detuvo con n = %d y k = %d\n",n,k);
+  //printf("Se detuvo con n = %d y k = %d\t",n,k);
 
   /* bin apunta a un contenedor no vacio de grid */
   ans = closest_point(&(bin->puntos),p);
@@ -247,108 +236,192 @@ point *grid_search(grid *map,point *p) {
   m = n;
   l = k;
 
-  if (l == 0) {
-    i = a + n;
-    j = b;
-    if (i < map->n) 
-      if (j >= 0 && j < map->m) 
-	if (map->A[i][j] != NULL) {
+  do {
+    if (l == 0) {
+      i = a + m;
+      j = b;
+      if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
+
+      i = a;
+      j = b + m;
+      if (j < map->m && i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
+    
+      i = a - m;
+      j = b;
+      if (i >= 0 && j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
+    
+      i = a;
+      j = b - m;
+      if (j >= 0 && i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
+    }
+
+    if (l > 0) l--;
+    while (++l < m && (m-1)*(m-1) + (l-1)*(l-1) < d*d) {
+
+      i = a + m;
+      if (i < map->n) {
+	j = b + l;
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL) {
 	  aux = closest_point(&(map->A[i][j]->puntos),p);
 	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
 	  if (dist(p,aux) < d) {
-	    d = dist(aux);
+	    d = dist(aux,p);
 	    ans = aux;
 	  }
-
-    i = a;
-    j = b + n;
-    if (j < map->m)
-      if (i >= 0 && i < map->n)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
-    
-    i = a - n;
-    j = b;
-    if (i >= 0)
-      if (j >= 0 && j < map->m)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
-    
-    i = a;
-    j = b - n;
-    if (j >= 0)
-      if (i >= 0 && i < map->n)
-	if (map->A[i][j] != NULL) bin = map->A[i][j];
-
-    while (b == NULL && ++k < n) {
-
-      i = a + n;
-      if (i < map->n) {
-	j = b + k;
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-	j = b - k;
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	}
+	j = b - l;
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
       }
 
-      j = b + n;
+      j = b + m;
       if (j < map->m) {
-	i = a + k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-	i = a - k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	i = a + l;
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
+	i = a - l;
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
       }
     
-      i = a - n;
+      i = a - m;
       if (i >= 0) {
-	j = b + k;
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-	j = b - k;
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+	j = b + l;
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
+	j = b - l;
+	if (j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
       }
     
-      j = b - n;
+      j = b - m;
       if (j >= 0) {
-	i = a + k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-	i = a - k;
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
-
+	i = a + l;
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
+	i = a - l;
+	if (i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	  aux = closest_point(&(map->A[i][j]->puntos),p);
+	  map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	  if (dist(p,aux) < d) {
+	    d = dist(aux,p);
+	    ans = aux;
+	  }
+	}
       }
-      
     }
 
-    if (bin == NULL) {
+    if (l == m && 2 * (m - 1)*(m - 1) * map->delta < d) {
       i = a + n;
       j = b + n;
-      if (i < map->n) 
-	if (j >= 0 && j < map->m) 
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
 
       i = a - n;
       j = b + n;
-      if (j < map->m)
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (j < map->m && i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
     
       i = a - n;
       j = b - n;
-      if (i >= 0)
-	if (j >= 0 && j < map->m)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (i >= 0 && j >= 0 && j < map->m && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
     
       i = a + n;
       j = b - n;
-      if (j >= 0)
-	if (i >= 0 && i < map->n)
-	  if (map->A[i][j] != NULL) bin = map->A[i][j];
+      if (j >= 0 && i >= 0 && i < map->n && map->A[i][j] != NULL) {
+	aux = closest_point(&(map->A[i][j]->puntos),p);
+	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
+	if (dist(p,aux) < d) {
+	  d = dist(aux,p);
+	  ans = aux;
+	}
+      }
     }
-  } while ( (m-1)*(m-1) + (l-1)*(l-1) < d)
+    l = 0;
+  } while ( d > ++m * map->delta);
   return ans;
 }
 
