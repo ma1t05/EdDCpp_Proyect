@@ -25,7 +25,10 @@ int main (int argc,char* argv[]){
   point *p;
 
   // Arreglo de puntos
-  k = read_points_file_xyd("../Q_MCLP_818.txt",&p);
+  //k = read_points_file_xyd("../Instancias/pmedian818.txt",&p);
+  seed();
+  k = (argc > 1 ? atoi(argv[1]) : 1024);
+  p = point_generate_random_instance(k);
   //printf("Prueba Cuadrantes\n");
   //prueba_cuadrantes(p,k,2);
   //printf("Prueba Grid\n");
