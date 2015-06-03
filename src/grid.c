@@ -236,11 +236,19 @@ point *grid_search(grid *map,point *p) {
   m = n;
   l = k;
 
+<<<<<<< HEAD
   do {
     if (l == 0) {
       i = a + m;
       j = b;
       if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL) {
+=======
+  if (l == 0) {
+    i = a + n;
+    j = b;
+    if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL)
+      {
+>>>>>>> 5679014f2f36e9a452643d738c25a31a9b5685a4
 	aux = closest_point(&(map->A[i][j]->puntos),p);
 	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
 	if (dist(p,aux) < d) {
@@ -248,6 +256,7 @@ point *grid_search(grid *map,point *p) {
 	  ans = aux;
 	}
       }
+<<<<<<< HEAD
 
       i = a;
       j = b + m;
@@ -264,12 +273,30 @@ point *grid_search(grid *map,point *p) {
       j = b;
       if (i >= 0 && j >= 0 && j < map->m && map->A[i][j] != NULL) {
 	aux = closest_point(&(map->A[i][j]->puntos),p);
+=======
+
+
+    i = a;
+    j = b + n;
+    if (j < map->m && i >= 0 && i < map->n && map->A[i][j] != NULL)
+      {
+	aux = closes_point(&(map->A[i][j]),p);
+>>>>>>> 5679014f2f36e9a452643d738c25a31a9b5685a4
 	map->cont.cont_dist += map->A[i][j]->puntos.elements + 1;
 	if (dist(p,aux) < d) {
 	  d = dist(aux,p);
 	  ans = aux;
 	}
       }
+<<<<<<< HEAD
+=======
+     
+    i = a - n;
+    j = b;
+    if (i >= 0)
+      if (j >= 0 && j < map->m)
+	if (map->A[i][j] != NULL) bin = map->A[i][j];
+>>>>>>> 5679014f2f36e9a452643d738c25a31a9b5685a4
     
       i = a;
       j = b - m;
@@ -283,8 +310,12 @@ point *grid_search(grid *map,point *p) {
       }
     }
 
+<<<<<<< HEAD
     if (l > 0) l--;
     while (++l < m && (m-1)*(m-1) + (l-1)*(l-1) < d*d) {
+=======
+    while (bin == NULL && ++k < n) {
+>>>>>>> 5679014f2f36e9a452643d738c25a31a9b5685a4
 
       i = a + m;
       if (i < map->n) {
@@ -423,7 +454,7 @@ point *grid_search(grid *map,point *p) {
     l = 0;
   } while ( d > ++m * map->delta);
   return ans;
-}
+  }
 
 contenedor *_grid_create_bin(float x0,float y0){
   contenedor *bin;
