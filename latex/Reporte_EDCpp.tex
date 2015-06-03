@@ -18,6 +18,7 @@
 
 % Private macros here (check that there is no clash with the style)
 \usepackage[]{algorithm2e}
+\usepackage{hyperref}
 
 % Natbib setup for author-year style
 \usepackage{natbib}
@@ -165,29 +166,29 @@ is greater than the minimum distance found.
   \KwData{T: B-tree with the points, p: point to find its nearest neighbor}
   \KwResult{the nearest neighbor of p}
   x = find-node(p)\;
-  \lIf{x != NULL}{return p\;}
+  \lIf{x != NULL}{return p}
   ans = NULL\;
   r = s = p\;
   \While{r != NULL or s != NULL}{
     \uIf{r != NULL}{
       r = predecessor(T,r)\;
-      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,r)}{ans = r\;}
+      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,r)}{ans = r}
       x = find-node(r)\;
       \uIf{x.leaf}{
-        \ForEach{r child of x}{\lIf{dist(ans,p) $>$ dist(r,p)}{ans = r\;}}
+        \ForEach{r child of x}{\lIf{dist(ans,p) $>$ dist(r,p)}{ans = r}}
         r = x.first-child\;
       }
-      \lIf{dist(ans,p) $<$ p.x - r.x}{r = NULL\;}
+      \lIf{dist(ans,p) $<$ p.x - r.x}{r = NULL}
     }
     \uIf{s != NULL}{
       s = successor(T,s)\;
-      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,s)}{ans = s\;}
+      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,s)}{ans = s}
       x = find-node(r)\;
       \uIf{x.leaf}{
-        \ForEach{s child of x}{\lIf{dist(ans,p) $>$ dist(p,s)}{ans = s\;}}
+        \ForEach{s child of x}{\lIf{dist(ans,p) $>$ dist(p,s)}{ans = s}}
         s = x.last-child\;
       }
-      \lIf{dist(ans,p) $<$ s.x - p.x}{s = NULL\;}
+      \lIf{dist(ans,p) $<$ s.x - p.x}{s = NULL}
     }    
   }
   \caption{Nearest Neighbor in B-tree}
@@ -223,6 +224,9 @@ associated with the nodes on this path decreases exponentially.
 
 
 \section{Experimental Results}
+\section{Conclusions}
+All the soucre code used for this test is available on
+\url{https://github.com/ma1t05/EdDCpp_Proyect}
 
 % Acknowledgments here
 \ACKNOWLEDGMENT{%
