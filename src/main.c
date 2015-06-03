@@ -25,11 +25,11 @@ int main (int argc,char* argv[]){
   point *p;
 
   // Arreglo de puntos
-  k = read_points_file("../Q_MCLP_324.txt",&p);
+  k = read_points_file_xyd("../Q_MCLP_818.txt",&p);
   //printf("Prueba Cuadrantes\n");
-  prueba_cuadrantes(p,k,2);
+  //prueba_cuadrantes(p,k,2);
   //printf("Prueba Grid\n");
-  //prueba_grid(p,k);
+  prueba_grid(p,k);
   free(p);
   return 0;
 }
@@ -283,9 +283,10 @@ void B_tree_show(B_tree* T,point *p) {
 void prueba_grid(point *p,int k) {
   int i;
   grid *G;
-  double d,err;
+  double d,err,t_err;
   point q,*e_ans,*ans;
   G = grid_create(p,k);
+  t_err = 0.0;
   
   // Punto aleatorio dentro de la region
   for (i = 0; i < 100;i++) {
@@ -296,11 +297,10 @@ void prueba_grid(point *p,int k) {
     d = dist(&q,e_ans);
     ans = grid_search(G,&q);
     err = dist(&q,ans) / d - 1.0;
+    if (err > 0) printf(" err = %.2f\n",err);
+    t_err += err;
   }
-  printf("Uso de dist prom: %.2f\n",G->cont.cont_dist * 0.01);
+  printf("Uso de dist prom: %.2f con un error de %.2f\n",G->cont.cont_dist * 0.01,t_err);
   
   grid_free(G);
 }
-
-
-
