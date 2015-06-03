@@ -5,7 +5,7 @@ float dist(point *a,point *b) {
   return sqrt((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
 }
 
-int read_points_file(const char* filename,point **p){
+int read_points_file_xyd(const char* filename,point **p){
   int k,d,i;
   float s;
   FILE *points_file;
@@ -32,4 +32,15 @@ int read_points_file(const char* filename,point **p){
   fclose(points_file);
   *p = puntos;
   return k;
+}
+
+point *point_generate_random_instance(int k){
+  point *p;
+  if (k <= 0) return NULL;
+  p = (point*)malloc(sizeof(point) * k);
+  while (k-- > 0) {
+    p[k].x = 0.01 * (rand() - RAND_MAX * 0.5);
+    p[k].y = 0.01 * (rand() - RAND_MAX * 0.5);
+  }
+  return p;
 }
