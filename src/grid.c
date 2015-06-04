@@ -284,7 +284,7 @@ point *grid_search(grid *map,point *p) {
     }
 
     if (l > 0) l--;
-    while (++l < m && (m-1)*(m-1) + (l-1)*(l-1) < d*d) {
+    while (++l < m && ((m-1)*(m-1) + (l-1)*(l-1)) * map->delta * map->delta < d*d) {
 
       i = a + m;
       if (i < map->n) {
@@ -375,7 +375,7 @@ point *grid_search(grid *map,point *p) {
       }
     }
 
-    if (l == m && 2 * (m - 1)*(m - 1) * map->delta < d) {
+    if (l == m && 2 * (m - 1)*(m - 1) * map->delta * map->delta < d * d) {
       i = a + n;
       j = b + n;
       if (i < map->n && j >= 0 && j < map->m && map->A[i][j] != NULL) {
@@ -421,7 +421,7 @@ point *grid_search(grid *map,point *p) {
       }
     }
     l = 0;
-  } while ( d > ++m * map->delta);
+  } while ( d > map->delta * m++ );
   return ans;
   }
 
