@@ -26,7 +26,7 @@ OBJSET = \
 	$(OUTDIR)/arrpoint.o
 # ------------------------------------------------------------
 
-main: $(OBJSET)
+$(OUTDIR)/main.out: $(OBJSET)
 	$(CC) $(CFLAGS) -o $(OUTDIR)/main.out $(OBJSET)
 $(OUTDIR)/main.o: $(SRCDIR)/main.c
 	$(CC) -c $(CFLAGS) $(SRCDIR)/main.c -o $(OUTDIR)/main.o
