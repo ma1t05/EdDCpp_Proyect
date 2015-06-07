@@ -31,8 +31,9 @@ int main (int argc,char* argv[]){
   p = point_generate_random_instance(k);
   //printf("Prueba Cuadrantes\n");
   //prueba_cuadrantes(p,k,2);
+  prueba_B_trees(p,k,2);
   //printf("Prueba Grid\n");
-  prueba_grid(p,k);
+  //prueba_grid(p,k);
   free(p);
   return 0;
 }
@@ -127,7 +128,7 @@ int compare_points(void *info,const void *a,const void *b) {
 void prueba_B_trees(point *p,int k,int a) {
   int i,j;
   int times = 100;
-  double d,*err;
+  double d,*err,e;
   point q,*ans,*e_ans;
   cuadrante *c;
   B_tree **T;
@@ -138,25 +139,31 @@ void prueba_B_trees(point *p,int k,int a) {
     T[j] = insert_points_B_tree(k,p,j+3);
     err[j] = 0.0;
   }
-  printf("Reserva memoria para arboles\n");
+  //printf("Reserva memoria para arboles\n");
   for (i = 0;i < times;i++) {
     // Punto aleatorio dentro de la region
     q.x = unif(c->x_min,c->x_max); 
     q.y = unif(c->y_min,c->y_max);
-    printf("Genera punto aleatorio\n");
+    //printf("Genera punto aleatorio\n");
     
     // Procedimiento exahustivo
     e_ans = nearest_point(p,k,&q);
     d = dist(e_ans,&q); /* Distancia Minima */
-    printf("Encuentra NN\n");
+    //printf("Encuentra NN\n");
 
     for (j = 0;j < a;j++) {
       ans = B_tree_nearest_point(T[j],&q);
-      printf("Encontro NN para B-tree con t = %d\n",j+3);
+      //printf("Encontro NN para B-tree con t = %d\n",j+3);
       /* Calcula errores */
       if (d > 0.0) {
-	printf("%.2f\n",dist(&q,ans) / d - 1.0);
-	err[j] += dist(&q,ans) / d - 1.0;
+	e = dist(ans,&q) / d - 1.0;
+	if (e > 0.0) printf("%.2f\n",e);
+	err[j] += e;
+	if (e < 0.0) {
+	  printf("Distancia minima a (%.2f,%.2f): %.2f ",q.x,q.y,d);
+	  printf("desde NN %d es (%.2f,%.2f)\n",e_ans->idx,e_ans->x,e_ans->y);
+	  printf("Distancia encontrada desde punto %d: %.2f (%.2f,%.2f)\n",ans->idx,dist(ans,&q),ans->x,ans->y);
+	}
       }
       else if (dist(&q,ans) > 0)
 	err[j] += 1.0;
@@ -168,6 +175,10 @@ void prueba_B_trees(point *p,int k,int a) {
   free(err);
   for (j = 0;j < a;j++) free(T[j]);
   free(T);
+}
+
+void f_print_point(const point* q) {
+  printf("(%.2f,%.2f)",q->x,q->y);
 }
 
 point *B_tree_nearest_point(B_tree* T,point* p) {
@@ -185,22 +196,26 @@ point *B_tree_nearest_point(B_tree* T,point* p) {
     if (r != NULL) {
       r = B_tree_predecessor(T,r);
       if (r != NULL) {
-	printf("r != NULL\n");
 	if (q == NULL || dist(p,r) < dist(p,q)) {
 	  /* Dist */ T->cont.cont_dist += 2;
 	  q = r;
-	  printf("\tactualiza q a r\n");
 	}
 	x = B_tree_find_node(T,r);
-	printf("\tencuntra nodo de r %d\n",x);
-	if (x == NULL) printf("*** WTF! ***\n");
+	if (x == NULL) {
+	  printf("*** WTF! ***\nBuscando a :");
+	  f_print_point(r);
+	  printf(" predecesor de ");
+	  f_print_point(p);
+	  printf("\n");
+	  x = B_tree_find_node2(T,r,f_print_point);
+	  printf("Busca nodo de q\n");
+	  B_tree_find_node2(T,p,f_print_point);
+	}
 	if (x->leaf) {
-	  printf("\tes hoja!\n");
 	  for (i = 0;i < x->n;i++) {
 	    if (dist(p,x->key[i]) < dist(p,q)) {
 	      /* Dist */ T->cont.cont_dist++;
 	      q = x->key[i];
-	      printf("\tactualiza q a x->key[%d]\n",i);
 	    }
 	  }
 	  r = x->key[0];
@@ -209,7 +224,6 @@ point *B_tree_nearest_point(B_tree* T,point* p) {
 	/* Comparations */ T->cont.cont_comp++;
 	if (p->x - r->x > dist(p,q))
 	  r = NULL;
-	printf("\texit r != NULL\n");
       }
       else x = NULL;
     }
@@ -217,22 +231,22 @@ point *B_tree_nearest_point(B_tree* T,point* p) {
     if (s != NULL) {
       s = B_tree_successor(T,s);
       if (s != NULL) {
-	printf("s != NULL\n");
 	if (q == NULL || dist(p,s) < dist(p,q)) {
 	  /* Dist */ T->cont.cont_dist += 2;
 	  q = s;
 	}
 	y = B_tree_find_node(T,s);
-	if (y->leaf && y != x) {
-	  printf("*** x != y\n");
-	  for (i = y->n;i > 0;i--) {
-	    if (dist(p,y->key[i-1]) < dist(p,q)) {
-	      /* Dist */ T->cont.cont_dist++;
-	      q = y->key[i-1];
+	if (y->leaf) {
+	  if (y != x) {
+	    for (i = y->n;i > 0;i--) {
+	      if (dist(p,y->key[i-1]) < dist(p,q)) {
+		/* Dist */ T->cont.cont_dist++;
+		q = y->key[i-1];
+	      }
 	    }
 	  }
+	  s = y->key[y->n - 1];
 	}
-	s = y->key[y->n - 1];
 	/* Dist */ T->cont.cont_dist++;
 	/* Comparations */ T->cont.cont_comp++;
 	if (s->x - p->x > dist(p,q)) 
