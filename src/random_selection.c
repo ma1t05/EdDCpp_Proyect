@@ -25,7 +25,9 @@ point* random_selection(point *set,int k,point *r) {
 point* nearest_point(point *set,int k,point *r) {
   int i,j = 0;
   for (i = 0;i < k;i++) {
-    if (dist(r,&(set[i])) < dist(r,&(set[j]))) j = i;
+    if (dist(r,&(set[i])) < dist(r,&(set[j]))) {
+      j = i;
+    }
   }
   return &(set[j]);
 }
