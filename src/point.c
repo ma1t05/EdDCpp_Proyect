@@ -41,6 +41,7 @@ point *point_generate_random_instance(int k){
   while (k-- > 0) {
     p[k].x = 0.01 * (rand() - RAND_MAX * 0.5);
     p[k].y = 0.01 * (rand() - RAND_MAX * 0.5);
+    p[k].idx = k;
   }
   return p;
 }
