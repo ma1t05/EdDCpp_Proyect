@@ -12,6 +12,7 @@
 
 B_node* _B_tree_create_node(int t);
 B_node* _B_tree_find_node(B_tree *T,B_node *x,const void *key);
+B_node *_B_tree_find_node2(B_tree *T,B_node *x,const void *key,void (*f_printf)(const void *key));
 void *_B_tree_successor(B_tree *T,B_node *x,const void *key);
 void *_B_tree_predecessor(B_tree *T,B_node *x,const void *key);
 void _B_tree_remove_key(B_tree *T,B_node *x,const void *key);
@@ -282,8 +283,7 @@ void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key){
   if (x->leaf) {
     /*printf("Comienza insert nonfull en hoja\n");*/
     while (i > 0 && (T->fcmp)(T->info,key,x->key[i-1]) < 0) {
-      /* Comparations */
-      T->cont.cont_comp++;
+      /* Comparations */ T->cont.cont_comp++;
       x->key[i] = x->key[--i]; /* Precaucion!, validar orden de aplicacion */
     }
     x->key[i] = key;
@@ -292,13 +292,12 @@ void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key){
   else {
     /*printf("Comienza insert nonfull en nodo\n");*/
     while (i > 0 && (T->fcmp)(T->info,key,x->key[i-1]) < 0) {
-      /* Comparations */
-      T->cont.cont_comp++;
+      /* Comparations */ T->cont.cont_comp++;
       i--;
     }
     if (x->c[i]->n == 2 * T->t - 1) {
       B_tree_split_child(T,x,i);
-      if (key > x->key[i]) i++;
+      if ((T->fcmp)(T->info,key,x->key[i]) > 0) i++;
     }
     B_tree_insert_nonfull(T,x->c[i],key);
   }
@@ -384,17 +383,46 @@ void gnuplot(B_tree *T){
   pclose(gnuPipe);
 }
 
-/*
-int main(int argc,char *argv[]){
-  int i,M;
-  B_tree *T = B_tree_create(3);
-  M = atoi(argv[1]);
-  for(i=1;i<M;i++)
-    B_tree_insert(T,i);
-  gnuplot(T);
-  free_B_tree(T);
-  return 0;
+B_node *B_tree_find_node2(B_tree *T,const void *key,void (*f_printf)(const void *key)) {
+  return _B_tree_find_node2(T,T->root,key,f_printf);
 }
-*/
+
+B_node *_B_tree_find_node2(B_tree *T,B_node *x,const void *key,void (*f_printf)(const void *key)) {
+  int i = 0;
+  if (x == T->root)
+    printf("Start search on root\n");
+  if (x->leaf)
+    printf("Current node is a leaf ");
+  else
+    printf("Current node isn't a leaf ");
+  printf(" whit %d elements\n",x->n);
+
+  while(i < x->n) {
+    f_printf((x->key)[i]);
+    printf(" ");
+    i++;
+  }
+  printf("\n");
+  i = 0;
+
+  while(i < x->n && (T->fcmp)(T->info,key,(x->key)[i]) > 0) {
+    /* Comparations */ T->cont.cont_comp++;
+    printf("For i = %d\t fcmp = %d\n",i,(T->fcmp)(T->info,key,(x->key)[i]));
+    f_printf((x->key)[i]);
+    i++;
+  }
+  printf("Stops on i = %d\n",i);
+  /* Comparations */ T->cont.cont_comp += 2;
+  if (i < x->n && (T->fcmp)(T->info,key,x->key[i]) == 0) {
+    printf("Return node x = %d\n",x);
+    return x;
+  }
+  if (x->leaf) {
+    printf("return NULL\n");
+    return NULL;
+  }
+  printf("Search in node c_i = %d\n",x->c[i]);
+  return _B_tree_find_node2(T,x->c[i],key,f_printf);
+}
 
 /* eof */
