@@ -9,6 +9,7 @@
 
 struct point {
   float x,y; /* x and y coords of point */
+  int idx;
 };
 
 struct iterations {
