@@ -61,6 +61,9 @@ B_node *B_tree_insert_key(B_tree *T,const void *key);
 B_node *B_tree_find_node(B_tree *T,const void *key);
 /* find node in B-tree */
 
+B_node *B_tree_find_node2(B_tree *T,const void *key,void (*f_printf)(const void *key));
+/* find node in B-tree */
+
 void *B_tree_predecessor(B_tree *T,const void *key);
 /* find the predecessor node in B-tree */
 
