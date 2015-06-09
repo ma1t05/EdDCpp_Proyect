@@ -60,3 +60,7 @@ void _arrdin_grow(arrdin* c) {
   c->a = b;
   c->size *= 2;
 }
+
+int sizeof_arrdin(arrdin* c) {
+  return c->size * sizeof(void*) + sizeof(arrdin);
+}
