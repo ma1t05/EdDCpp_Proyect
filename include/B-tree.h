@@ -79,6 +79,9 @@ void B_tree_delete_tree(B_tree *T);
 void gnuplot(B_tree *T);
 /* plots the B-tree from gnuplot */
 
+int sizeof_B_tree(B_tree *T);
+/* returns the size of the B-tree in bytes */
+
 #endif
 
 /* eof */
