@@ -451,3 +451,21 @@ void grid_free(grid *map) {
   free(map->A);
   free(map);
 }
+
+int sizeof_grid(grid *map) {
+  int i,j,size;
+
+  size = sizeof(map);
+  size += sizeof(contenedor**) * map->n;
+  size += sizeof(contenedor*) * map->n * map->m;
+  for (i = 0;i < map->n;i++) {
+    for (j = 0;j < map->m;j++) {
+      if (map->A[i][j] != NULL) {
+	size += sizeof_arrdin(&(map->A[i][j]->puntos));
+	size += sizeof(contenedor);
+      }
+    }
+  }
+  
+  return size;
+}
