@@ -16,6 +16,8 @@ struct iterations {
   struct point *ans;
   int cont_comp; /* Cantidad de Comparaciones */
   int cont_dist; /* Cantidad de calculos de distancia */
+  double t_setup; /* Tiempo de construccion */
+  double t_search; /* Tiempo de busqueda */
 };
 
 typedef struct point point;
