@@ -9,6 +9,7 @@
 #include "random_selection.h"
 
 #define EPSILON 0.001
+#define STEP_SIZE 1000
 
 void look_for_points(cuadrante*,int);
 B_tree *insert_points_B_tree(int,point*,int);
@@ -19,6 +20,7 @@ void B_tree_show(B_tree*,point*);
 void prueba_cuadrantes(point*,int,int);
 void prueba_B_trees(point*,int,int);
 void prueba_grid(point*,int);
+void NN_test();
 
 int main (int argc,char* argv[]){
   int k;
@@ -27,14 +29,13 @@ int main (int argc,char* argv[]){
   // Arreglo de puntos
   //k = read_points_file_xyd("../Instancias/pmedian818.txt",&p);
   seed();
-  k = (argc > 1 ? atoi(argv[1]) : 1024);
+  NN_test();
+  /*k = (argc > 1 ? atoi(argv[1]) : 1024);
   p = point_generate_random_instance(k);
-  //printf("Prueba Cuadrantes\n");
-  //prueba_cuadrantes(p,k,2);
-  prueba_B_trees(p,k,2);
-  //printf("Prueba Grid\n");
-  //prueba_grid(p,k);
-  free(p);
+  prueba_cuadrantes(p,k,5); // Hay error de aproximacion
+  prueba_B_trees(p,k,5);
+  prueba_grid(p,k);
+  free(p); /* */
   return 0;
 }
 
@@ -46,18 +47,27 @@ void prueba_cuadrantes(point *p,int k,int a) {
   point *c_ans,*e_ans;
   int times;
   double d;
-  double *err_c;
+  double *err_c,err;
+  clock_t start;
+  double sec;
 
   // Mapa dividido en cuadrantes
+  start = clock();
   c = (cuadrante**)malloc(sizeof(cuadrante*)*(a));
   err_c = (double*)malloc(sizeof(double)*(a));
-  for (j = 0;j < a;j++) c[j] = cuadrante_crea(p,k,j+3);
-  printf("Termina creacion de cuadrantes\n");
+  for (j = 0;j < a;j++) {
+    c[j] = cuadrante_crea(p,k,j+1);
+  }
+  sec = ((double)(clock() - start))/CLOCKS_PER_SEC;
+  printf("Termina creacion de cuadrantes en %.4f segundos\n",sec);
+  for (j = 0;j < a;j++) {
+    printf("Ocupando %.2f mb\n",(double)sizeof_cuadrante(c[j])/1024);
+  }
 
-  for(times = 100;times <= 10000;times += 100) {
+  for(times = 0;times < 10000;times += STEP_SIZE) {
     for (j = 0;j < a;j++) err_c[j] = 0.0;
 
-    for (i = 0;i < times;i++) {
+    for (i = 0;i < STEP_SIZE;i++) {
       // Punto aleatorio dentro de la region
       q.x = unif(c[0]->x_min,c[0]->x_max); 
       q.y = unif(c[0]->y_min,c[0]->y_max);
@@ -70,13 +80,17 @@ void prueba_cuadrantes(point *p,int k,int a) {
 	c_ans = cuadrante_search(c[j],&q);
    
 	// Calcular errores porcentuales
-	if (d > 0.0)
-	  err_c[j] += dist(&q,c_ans) / d - 1.0;
-	else 
-	  if (dist(&q,c_ans) > 0) err_c[j] += 1.0;
+	if (d > 0.0) {
+	  err = dist(&q,c_ans) / d - 1.0;
+	  if (err > 0.0) 
+	    printf("err = %.2f\n",err);
+	  err_c[j] += err;
+	}
+	else if (dist(&q,c_ans) > 0) 
+	  err_c[j] += 1.0;
       }
     }
-    printf("%d",times);
+    printf("%d",times+STEP_SIZE);
     for (j = 0; j < a;j++)
       printf(" %d %d %.2f",c[j]->cont.cont_comp,c[j]->cont.cont_dist,(double)c[j]->cont.cont_dist/(k*times));
     printf("\n");
@@ -138,6 +152,7 @@ void prueba_B_trees(point *p,int k,int a) {
   for (j = 0;j < a;j++) {
     T[j] = insert_points_B_tree(k,p,j+3);
     err[j] = 0.0;
+    printf("Creo un arbol B con %.2f Kb\n",(double)sizeof_B_tree(T[j])/1024);
   }
   //printf("Reserva memoria para arboles\n");
   for (i = 0;i < times;i++) {
@@ -177,7 +192,8 @@ void prueba_B_trees(point *p,int k,int a) {
   free(T);
 }
 
-void f_print_point(const point* q) {
+void f_print_point(const void* r) {
+  point *q = (point*)r;
   printf("(%.2f,%.2f)",q->x,q->y);
 }
 
@@ -303,6 +319,7 @@ void prueba_grid(point *p,int k) {
   double d,err,t_err;
   point q,*e_ans,*ans;
   G = grid_create(p,k);
+  printf("Crea grid usando %.2f Kb\n",(double)sizeof_grid(G)/1024);
   t_err = 0.0;
   
   // Punto aleatorio dentro de la region
@@ -320,4 +337,154 @@ void prueba_grid(point *p,int k) {
   printf("Uso de dist prom: %.2f con un error de %.2f\n",G->cont.cont_dist * 0.01,t_err);
   
   grid_free(G);
+}
+
+void NN_test() {
+  int i,j,k;
+  int times;
+  double d;
+  double nn_time;
+  point *p,*q;
+  point *ans,*c_ans,*b_ans,*g_ans;
+  double *err_c,*err_b,err_g;
+  int c_num = 5,b_num = 5;
+  clock_t beginning,now;
+  cuadrante **c;
+  B_tree **T;
+  grid *G;
+
+  for (k = 100;k <= 1000;k+=100) {
+    printf("Comienza for sobre k = %d\n",k);
+    p = point_generate_random_instance(k);
+    nn_time = 0.0;
+ 
+    // Cuadrantes
+    //printf("Crea cuadrantes\n");
+    c = (cuadrante**)malloc(sizeof(cuadrante*)*(c_num));
+    err_c = (double*)malloc(sizeof(double)*(c_num));
+    for (j = 0;j < c_num;j++) {
+      beginning = clock();
+      c[j] = cuadrante_crea(p,k,j+1);
+      now = clock();
+      c[j]->cont.t_setup = ((double)(now - beginning))/CLOCKS_PER_SEC;
+      c[j]->cont.t_search = 0.0;
+      err_c[j] = 0.0;
+    }
+
+    // Arboles B
+    //printf("Crea arboles-B\n");
+    T = (B_tree**)malloc(sizeof(B_tree*)*b_num);
+    err_b = (double*)malloc(sizeof(double)*b_num);
+    for (j = 0;j < b_num;j++) {
+      beginning = clock();
+      T[j] = insert_points_B_tree(k,p,j+3);
+      now = clock();
+      T[j]->cont.t_setup = ((double)(now - beginning))/CLOCKS_PER_SEC;
+      T[j]->cont.t_search = 0.0;
+      err_b[j] = 0.0;
+    }
+  
+    // Grid
+    //printf("Crea Grid\n");
+    beginning = clock();
+    G = grid_create(p,k);
+    now = clock();
+    G->cont.t_setup = ((double)(now - beginning))/CLOCKS_PER_SEC;
+    G->cont.t_search = 0.0;
+    err_g = 0.0;
+    
+    printf("setup\t0.00");
+    for (j = 0;j < c_num;j++)
+      printf("\t%.2f",c[j]->cont.t_setup);
+    for (j = 0;j < b_num;j++)
+      printf("\t%.2f",T[j]->cont.t_setup);
+    printf("\t%.2f\n",G->cont.t_setup);
+    
+    // Uso de memoria
+    printf("Kb\t0.00");
+    for (j = 0;j < c_num;j++) {
+      printf("\t%.2f",(double)sizeof_cuadrante(c[j])/1024);
+    }
+    for (j = 0;j < b_num;j++) {
+      printf("\t%.2f",(double)sizeof_B_tree(T[j])/1024);
+    }
+    printf("\t%.2f\n",(double)sizeof_grid(G)/1024);
+
+    for(times = 0;times < 10000;times += STEP_SIZE) {
+      //printf("Comienza ciclo de %d a %d iteraciones\n",times - 100,times);
+      // Punto aleatorio dentro de la region
+      q = point_generate_random_instance(STEP_SIZE);
+
+      // Procedimiento exahustivo
+      //printf("Comienza procedimiento exahustivo\n");
+      for (i = 0;i < STEP_SIZE;i++) {
+	ans = nearest_point(p,k,&(q[i]));
+	d = dist(ans,&(q[i])); /* Distancia Minima */
+      }
+      
+      // Busqueda por cuadrantes
+      //printf("Comienza busqueda por cuadrantes\n");
+      for(j = 0;j < c_num;j++) {
+	//printf("Comienza cuadrante %d\n",j+1);
+	beginning = clock();
+	for (i = 0;i < STEP_SIZE;i++) {
+	  c_ans = cuadrante_search(c[j],&(q[i]));
+	}
+	now = clock();
+	c[j]->cont.t_search += ((double)(now - beginning))/CLOCKS_PER_SEC;
+      }
+
+      // Busqueda en arboles-B
+      //printf("Comienza busqueda por arboles B\n");
+      for (j = 0;j < b_num;j++) {
+	beginning = clock();
+	for (i = 0;i < STEP_SIZE;i++) {
+	  b_ans = B_tree_nearest_point(T[j],&(q[i]));
+	}
+	now = clock();
+	T[j]->cont.t_search += ((double)(now - beginning))/CLOCKS_PER_SEC;
+      }
+
+      // Grid
+      //printf("Comienza busqueda en Grid\n");
+      beginning = clock();
+      for (i = 0;i < STEP_SIZE;i++) {
+	g_ans = grid_search(G,&(q[i]));
+      }
+      now = clock();
+      G->cont.t_search += ((double)(now - beginning))/CLOCKS_PER_SEC;
+
+      beginning = clock();
+      for (i = 0;i < STEP_SIZE;i++) {
+	ans = nearest_point(p,k,&(q[i]));
+      }
+      now = clock();
+      nn_time += ((double)(now - beginning))/CLOCKS_PER_SEC;
+
+      free(q);
+      
+      printf("%d",times+STEP_SIZE);
+      printf("\t%.2f",nn_time);
+      for (j = 0;j < c_num;j++)
+	printf("\t%.2f",c[j]->cont.t_search);
+      for (j = 0;j < b_num;j++)
+	printf("\t%.2f",T[j]->cont.t_search);
+      printf("\t%.2f\n",G->cont.t_search);
+
+    }
+  
+    grid_free(G);
+
+    free(err_b);
+    for (j = 0;j < b_num;j++)
+      B_tree_delete_tree(T[j]);
+    free(T);
+
+    free(err_c);
+    for (j = 0;j < c_num;j++)
+      cuadrante_free(c[j]);
+    free(c);
+
+    free(p);
+  }
 }
