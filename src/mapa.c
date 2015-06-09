@@ -206,3 +206,16 @@ void cuadrante_free(cuadrante* c) {
   arrdin_free(c->points);
   free(c);
 }
+
+int sizeof_cuadrante(cuadrante* c) {
+  int size = 0;
+  if (c->is_leaf) {
+    size += sizeof_cuadrante(c->c_00);
+    size += sizeof_cuadrante(c->c_01);
+    size += sizeof_cuadrante(c->c_11);
+    size += sizeof_cuadrante(c->c_10);
+  }
+  size += sizeof(cuadrante);
+  size += sizeof_arrdin(c->points);  
+  return size;
+}
