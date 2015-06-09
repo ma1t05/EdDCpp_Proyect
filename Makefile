@@ -5,7 +5,7 @@ SRCDIR = src
 INCDIR = include
 
 # Compiler
-CC = gcc -O0
+CC = gcc -O0 -g
 
 # Compiler options
 COPT = -m32 -fPIC -fno-strict-aliasing
