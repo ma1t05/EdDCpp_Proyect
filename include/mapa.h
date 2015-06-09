@@ -36,5 +36,6 @@ point* cuadrante_search(cuadrante*,point*);
 int cuadrante_add(cuadrante*,point*);
 void cuadrante_printf(cuadrante*,int);
 void cuadrante_free(cuadrante*);
+int sizeof_cuadrante(cuadrante*);
 
 #endif
