@@ -22,6 +22,7 @@ void free_B_node(B_node *x);
 void B_tree_split_child(B_tree *T,B_node *x,int i);
 void B_tree_insert_nonfull(B_tree *T,B_node *x,const void *key);
 float plot(B_node *x,FILE *nodes,FILE *edges,FILE* boxes,float xo,float y);
+int _sizeof_B_tree(B_tree *T,B_node *x);
 
 B_tree* B_tree_create_tree (int t,int (*fcmp)(void *info,const void *key1,const void *key2)){
   B_tree *T;
@@ -425,4 +426,38 @@ B_node *_B_tree_find_node2(B_tree *T,B_node *x,const void *key,void (*f_printf)(
   return _B_tree_find_node2(T,x->c[i],key,f_printf);
 }
 
+int sizeof_B_tree(B_tree *T) {
+  int size;
+  size = sizeof(B_tree);
+  if (T->root != NULL) {
+    size += _sizeof_B_tree(T,T->root);
+  }
+  return size;
+}
+
+int _sizeof_B_tree(B_tree *T,B_node *x) {
+  int i,size;
+  if (x == NULL) 
+    return 0;
+  size = sizeof(B_node);
+  size += sizeof(void*) * (2 * T->t - 1);
+  size += sizeof(B_node*) * (2 * T->t);
+  if (x->leaf == FALSE) {
+    for(i = 0;i <= x->n;i++)
+      size += _sizeof_B_tree(T,x->c[i]);
+  }
+  return size;
+}
+
 /* eof */
+
+
+
+
+
+
+
+
+
+
+
