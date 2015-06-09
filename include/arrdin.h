@@ -18,5 +18,6 @@ void arrdin_add(arrdin*,void*);
 void arrdin_remove(arrdin*,void*);
 void arrdin_free(arrdin*);
 void _arrdin_grow(arrdin*);
+int sizeof_arrdin(arrdin*);
 
 #endif
