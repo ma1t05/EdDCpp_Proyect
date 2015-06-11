@@ -352,6 +352,10 @@ void NN_test() {
   cuadrante **c;
   B_tree **T;
   grid *G;
+  FILE *setup,*memory,*time;
+  setup = fopen("setup.dat","w");
+  memory  = fopen("memory.dat","w");
+  time = fopen("time.dat","w");
 
   for (k = 100;k <= 1000;k+=100) {
     printf("Comienza for sobre k = %d\n",k);
@@ -393,22 +397,22 @@ void NN_test() {
     G->cont.t_search = 0.0;
     err_g = 0.0;
     
-    printf("setup\t0.00");
+    fprintf(setup,"%d\t0.00",k);
     for (j = 0;j < c_num;j++)
-      printf("\t%.2f",c[j]->cont.t_setup);
+      fprintf(setup,"\t%f",c[j]->cont.t_setup);
     for (j = 0;j < b_num;j++)
-      printf("\t%.2f",T[j]->cont.t_setup);
-    printf("\t%.2f\n",G->cont.t_setup);
+      fprintf(setup,"\t%f",T[j]->cont.t_setup);
+    fprintf(setup,"\t%f\n",G->cont.t_setup);
     
     // Uso de memoria
-    printf("Kb\t0.00");
+    fprintf(memory,"%d\t0.00",k);
     for (j = 0;j < c_num;j++) {
-      printf("\t%.2f",(double)sizeof_cuadrante(c[j])/1024);
+      fprintf(memory,"\t%f",(double)sizeof_cuadrante(c[j])/1024);
     }
     for (j = 0;j < b_num;j++) {
-      printf("\t%.2f",(double)sizeof_B_tree(T[j])/1024);
+      fprintf(memory,"\t%f",(double)sizeof_B_tree(T[j])/1024);
     }
-    printf("\t%.2f\n",(double)sizeof_grid(G)/1024);
+    fprintf(memory,"\t%f\n",(double)sizeof_grid(G)/1024);
 
     for(times = 0;times < 10000;times += STEP_SIZE) {
       //printf("Comienza ciclo de %d a %d iteraciones\n",times - 100,times);
@@ -463,13 +467,13 @@ void NN_test() {
 
       free(q);
       
-      printf("%d",times+STEP_SIZE);
-      printf("\t%.2f",nn_time);
+      fprintf(time,"%d\t%d",k,times+STEP_SIZE);
+      fprintf(time,"\t%f",nn_time);
       for (j = 0;j < c_num;j++)
-	printf("\t%.2f",c[j]->cont.t_search);
+	fprintf(time,"\t%f",c[j]->cont.t_search);
       for (j = 0;j < b_num;j++)
-	printf("\t%.2f",T[j]->cont.t_search);
-      printf("\t%.2f\n",G->cont.t_search);
+	fprintf(time,"\t%f",T[j]->cont.t_search);
+      fprintf(time,"\t%f\n",G->cont.t_search);
 
     }
   
@@ -487,4 +491,7 @@ void NN_test() {
 
     free(p);
   }
+  fclose(setup);
+  fclose(memory);
+  fclose(time);
 }
