@@ -19,6 +19,8 @@
 % Private macros here (check that there is no clash with the style)
 \usepackage[]{algorithm2e}
 \usepackage{hyperref}
+\graphicspath{images/}
+\usepackage{caption}
 
 % Natbib setup for author-year style
 \usepackage{natbib}
@@ -93,11 +95,17 @@
 \ABSTRACT{%
   Consider a set \textit{S} of \textit{n} data points in real 2-dimensional space, 
   where distances are measured using Euclidean metric.
-  In nearest neighbor searching, we preprocess S into a data structure,
+  In nearest neighbor searching,
+  we preprocess \textit{S} into a data structure,
   so that given any query point \textit{q} $\in R^2$,
   is the closest point of \textit{S} to \textit{q} can be reported quickly.
-  
-
+  The emphasis is on the representation of data
+  used in applications in image processing,
+  computer graphics, geographic information systems, and robotics.
+  Therefore, it is suitable to solve the problem
+  in the shortest time possible using the least amount of resources.
+  Finally, we present the results of several experiments
+  obtained using three different implementations.
 }%
 
 % Sample 
@@ -105,7 +113,7 @@
 %  existence of optimal policies; semi-Markov decision process; cyclic schedule}
 
 % Fill in data. If unknown, outcomment the field
-\KEYWORDS{nearest neighbor searching}
+\KEYWORDS{Searching, nearest neighbor searching, comparison of data structures, quadtree, B-tree}
 %\HISTORY{}
 
 \maketitle
@@ -131,7 +139,8 @@ and the task is to preprocess these points so that,
 given any query point $q \in X$,
 the data point nearest to \textit{q} can be reported quickly.
 This is also called the closest-point problem and the post office problem.
-Nearest neighbor searching is an important problem in a variety of applications, including 
+Nearest neighbor searching is an important problem in a variety of applications, 
+including 
 statistics [Devroye and Wagner 1982],
 pattern recognition and classification [Cover and Hart 1967; Duda and Hart 1973],
 document retrieval [Deerwester et al. 1990],
@@ -143,91 +152,177 @@ and knowledge discovery and data mining [Fayyad et al. 1996].
 Hierarchical data structures are useful because of their ability to focus on the
 interesting subsets of the data. 
 This focusing results in an efficient representation and improved execution times and is thus
-particularly useful for performing set operations
+particularly useful for performing set operations.
+
+The rest of the paper is structured as follows,
+The next three sections, 
+each containing one of the following structures,
+grid map, B-tree and Quadtree,
+section 5 contains the experimental results
+and finally section 6 contains the conclusions.
+
+\section{Nearest Neighbor Searching using Grid Map}
+Using a grid map is one of the first ideas that come to mind,
+the only thing why we should of worring, is the size of the cells,
+it seeks to have the fewest points in each cell,
+as well as having the least number of cells.
+One way to divide the region where the points are,
+It is, first partitioning axis of lesser rank, in \textit{N} regions of equal size,
+where \textit{N} is such that $\frac{n}{N} = \log{n}$,
+hoping to leave $\log{n}$ points in each partition
+(this is true under the supocion that the points are uniformly distributed),
+then use the same length, to partition the other axis.
+
+\subsection{Algorithm for Grid Map}
+In a grid map, it is easy to identify the cell that corresponds to a given point,
+if this is within the grid,
+then, to find the nearest neighbor,
+first we determine the cell of the grid map to which it belongs,
+then we started looking from that cell, the nearest cell, not empty
+then compared with each point inside the not empty cell,
+finally, he is still looking into the cells,
+which contain at least a portion of the cell,
+inside the circle centered at the first cell,
+with radius, the smallest distance found so far.
 
 \section{Nearest Neighbor Searching using B-trees}
 B-tree is a tree data structure that keeps data sorted
-and allows searches, sequential access, insertions, 
-and deletions in logarithmic time. 
-The B-tree is a generalization of a binary search tree 
+and allows searches, sequential access, insertions,
+and deletions in logarithmic time.
+The B-tree is a generalization of a binary search tree
 in that a node can have more than two children (Comer 1979, p. 123).
-To store the points in the B-tree, an order relation was used.
+To store the points in the B-tree, an lexicographical order relation was used.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.5]{images/b-tree}
+  \caption{A B-tree with letters, of order 2 or 3}
+  \label{fig:Btree}
+\end{figure}
 
 \subsection{Algorithm for B-trees}
 Given an order relation, it's easy to search the predecessor / successor,
 but we can't guarantee that any of them is the nearest.
 Then we need to keep looking, to ensure we have the nearest point.
 Since we're using a relation of lexicographical order,
-we can stop lookin for points, 
-when the difference betwen the first coordinate,
+we can stop looking for points, 
+when the difference between the first coordinate
 is greater than the minimum distance found.
 
 \begin{algorithm}[t]
   \KwData{T: B-tree with the points, p: point to find its nearest neighbor}
   \KwResult{the nearest neighbor of p}
-  x = find-node(p)\;
-  \lIf{x != NULL}{return p}
-  ans = NULL\;
+  x = find-node-of(p)\;
+  \lIf{x exist}{return p\;}
+  ans = $\emptyset$\;
   r = s = p\;
-  \While{r != NULL or s != NULL}{
-    \uIf{r != NULL}{
-      r = predecessor(T,r)\;
-      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,r)}{ans = r}
-      x = find-node(r)\;
-      \uIf{x.leaf}{
-        \ForEach{r child of x}{\lIf{dist(ans,p) $>$ dist(r,p)}{ans = r}}
-        r = x.first-child\;
-      }
-      \lIf{dist(ans,p) $<$ p.x - r.x}{r = NULL}
+  \While{r != $\emptyset$ or s != $\emptyset$}{
+    r = predecessor of r on T\;
+    \lIf{r is colser to p than ans}{ans = r\;}
+    x = find-node-of(r)\;
+    \uIf{x is a leaf}{
+      \ForEach{r child of x}{\lIf{r is colset to p than ans}{ans = r}}
+      r = first-child of x\;
     }
-    \uIf{s != NULL}{
-      s = successor(T,s)\;
-      \lIf{ans = NULL or dist(ans,p) $>$ dist(p,s)}{ans = s}
-      x = find-node(r)\;
-      \uIf{x.leaf}{
-        \ForEach{s child of x}{\lIf{dist(ans,p) $>$ dist(p,s)}{ans = s}}
-        s = x.last-child\;
-      }
-      \lIf{dist(ans,p) $<$ s.x - p.x}{s = NULL}
-    }    
+    \lIf{distance in x from r to p is greater than distance between ans and p}{r = $\emptyset$}
+    s = successor of s on T\;
+    \lIf{s is colser to p than ans}{ans = s\;}
+    x = find-node-of(s)\;
+    \uIf{x is a leaf}{
+      \ForEach{s child of x}{\lIf{s is closer to p than ans}{nas = r}}
+      s = x.last-child\;
+    }
+    \lIf{distance in x from s to p is greater than distance between ans and p}{s = $\emptyset$}    
   }
   \caption{Nearest Neighbor in B-tree}
 \end{algorithm}
 
 \section{Quadtree}
-The term quadtree is used to describe a class of hierarchical data structures whose
-common property is that they are based on the principle of recursive decomposition of space.
-They can be differentiated on the following bases: 
-(1) the type of data that they are used to represent, 
-(2) the principle guiding the decomposition process, and 
-(3) the resolution (variable or not)
-
-
 A quadtree is a tree data structure in which each internal node has exactly four children. 
 Quadtrees are most often used to partition a two-dimensional space by recursively 
 subdividing it into four quadrants or regions. 
 The regions may be square or rectangular, or may have arbitrary shapes. 
-This data structure was named a quadtree by Raphael Finkel and J.L. Bentley in 1974. 
+\begin{enumerate}
+\item They decompose space into adaptable cells
+\item Each cell (or bucket) has a maximum capacity. When maximum capacity is reached, the bucket splits
+\item The tree directory follows the spatial decomposition of the quadtree.
+\end{enumerate}
+It can be seen in Figure~\ref{fig:quadtree},
+the partition plane being performed by a quadtree with capacity 1
 
-In this section, we introduce the \textit{balanced box-decomposition tree} or BBD-tree,
-which is a data structure used in our algorithm. 
-It is among the general class of geometric data structures based on a hierarchical decomposition of space
-into \textit{d}-dimensional rectangles whose sides are orthogonal to the coordinate axes.
-The main feature of the BBD-tree is that it combines in one data structure two
-important features that are present in these data structures.
-This data structure recursively subdivides space by a hyperplane that is orthogonal to one
-of the coordinate axes and that partitions the data points as evenly as possible.
-As a consequence, as one descends any path in the tree, the cardinality of points
-associated with the nodes on this path decreases exponentially.
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.5]{images/point-quadtree}
+  \caption{A point quadtree with point data. Bucket capacity 1}
+  \label{fig:quadtree}
+\end{figure}
+To structure the points, we use quadtree with overlap,
+this is that each quadrant contains a part of has rightful
 
-\section{Grid}
-
+\subsection{Algorithm for Quadtrees}
+To find the nearest neighbor in a quadtree,
+we need to compare the given point with the center of the quadtree,
+and determine the next quadrant according to their position.
+Until the quadrant in which we are, no contains more children.
+To ensure that the point found is the nearest,
+this would have to be closer to either side of the quadrant.
 
 \section{Experimental Results}
-\section{Conclusions}
-All the soucre code used for this test is available on
-\url{https://github.com/ma1t05/EdDCpp_Proyect}
+Experiments were performed in a computer with Debian 8 'Jessie'
+and characteristics specified in Table~\ref{tab:cpu}.
 
+\begin{table}[h]
+  \caption{CPU characteristics}
+  \label{tab:cpu}
+  \begin{center}
+    \begin{tabular}{|l|r|}
+      \hline
+      Architecture:        & i686 \\
+      CPU op-mode(s):      & 32-bit, 64-bit \\
+      Byte Order:          & Little Endian \\
+      CPU(s):              & 2 \\
+      Thread(s) per core:  & 1 \\
+      Core(s) per socket:  & 2 \\
+      Socket(s):           & 1 \\
+      Vendor ID:           & GenuineIntel \\
+      CPU family:          & 6 \\
+      Model:               & 15 \\
+      Stepping:            & 13 \\
+      CPU MHz:             & 1861.822 \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+All the soucre code used for this test is available on
+\url{https://github.com/ma1t05/EdDCpp_Proyect}.
+
+The following experiments were performed
+a set of \textit{k} points distributed uniformly in the plane was created,
+for $k = 100,200,\ldots,1000$, to measure the setup time, and the memory uset to storage the structure, the results can be seen in Figures~\ref{fig:setup} and \ref{fig:memory}.
+\begin{figure}[h!]
+  \caption{Time Setup}
+  \includegraphics[scale=1.25]{images/setup}
+  \label{fig:setup}
+  \includegraphics[scale=1.25]{images/setup_comparison}
+\end{figure}[h!]
+\begin{figure}
+  \caption{Memory Usage}
+  \includegraphics[scale=1.25]{images/memory}
+  \label{fig:memory}
+  \includegraphics[scale=1.25]{images/memory_comparison}
+\end{figure}
+
+For $k = 1000$, we did a search of \textit{l} points, with $l = 1000,2000,\ldots,10000$, to see how the time behaves.
+
+\section{Conclusions}
+We can clearly see that the most advisable structure is the B-tree,
+because it has a search time similar to the grid map (which is the lowest),
+but it requires less memory, which increases linearly, not quadratic.
+And regarding the quadtree, the only disadvantage it takes is the use of memory, 
+the memory for B-tree apparently grows linearly, 
+while the memory of the quadtree apparently grows logarithmically in some cases.
+Our conclusions are based on having uniformly distributed points,
+for future work, we could try other distributions for the points.
 % Acknowledgments here
 \ACKNOWLEDGMENT{%
 We would like to thank Elisa Schaeffer for her helpful comments.
@@ -256,10 +351,48 @@ We would like to thank Elisa Schaeffer for her helpful comments.
 % CASE 1: BiBTeX used to constantly update the references 
 %   (while the paper is being written).
 %\bibliographystyle{ijocv081} % outcomment this and next line in Case 1
-%\bibliography{<your bib file(s)>} % if more than one, comma separated
+%\bibliography{Reporte_EDCpp.bib} % if more than one, comma separated
+\begin{thebibliography}{9}
+
+\bibitem{arya1994optimal}
+  Arya, Sunil and Mount, David M and Netanyahu, N and Silverman, Ruth and Wu, Angela Y,
+  \emph{\LaTeX: An optimal algorithm for approximate nearest neighbor searching in fixed dimensions},
+  Proc. 5th ACM-SIAM Sympos. Discrete Algorithms,
+  pages 573--582,
+  1994.
+
+\bibitem{samet1984quadtree}
+  Samet, Hanan,
+  \emph{\LaTeX: The quadtree and related hierarchical data structures},
+  ACM Computing Surveys (CSUR),
+  volume 16, number 2, pages 187--260,
+  1984.
+
+\bibitem{jadbabaie2003coordination}
+  Jadbabaie, Ali and Lin, Jie and others,
+  \emph{\LaTeX: Coordination of groups of mobile autonomous agents using nearest neighbor rules},
+  Automatic Control, IEEE Transactions on
+  volume 48, number 6, pages 988--1001,
+  2003
+
+\bibitem{roussopoulos1995nearest}
+  Roussopoulos, Nick and Kelley, Stephen and Vincent, Fr{\'e}d{\'e}ric,
+  \emph{\LaTeX: Nearest neighbor queries},
+  ACM sigmod record,
+  volume 24, number 2, pages 71--79,
+  1995.
+
+\bibitem{sproull1991refinements}
+  Sproull, Robert F,
+  \emph{\LaTeX: Refinements to nearest-neighbor searching ink-dimensional trees},
+  Addison Wesley, Massachusetts,
+  Algorithmica, volume 6, number 1-6, pages 579--589, Springer,
+  1994.
+
+\end{thebibliography}
 
 % CASE 2: BiBTeX used to generate mypaper.bbl (to be further fine tuned)
-%\input{mypaper.bbl} % outcomment this line in Case 2
+%\input{Reporte_EDCpp.bbl} % outcomment this line in Case 2
 
 \end{document}
 
